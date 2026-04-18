@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 enum KeepCleanPalette {
@@ -16,62 +17,28 @@ struct KeepCleanBrandMark: View {
     var size: CGFloat = 64
 
     var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: size * 0.24, style: .continuous)
-                .fill(KeepCleanPalette.surfaceWarm)
-
-            RoundedRectangle(cornerRadius: size * 0.24, style: .continuous)
-                .strokeBorder(KeepCleanPalette.border, lineWidth: max(1, size * 0.018))
-
-            RoundedRectangle(cornerRadius: size * 0.14, style: .continuous)
-                .strokeBorder(KeepCleanPalette.ink.opacity(0.70), lineWidth: size * 0.04)
-                .frame(width: size * 0.56, height: size * 0.38)
-                .offset(y: size * 0.02)
-
-            VStack(spacing: size * 0.045) {
-                HStack(spacing: size * 0.045) {
-                    key(size: size * 0.075)
-                    key(size: size * 0.075)
-                    key(size: size * 0.075)
-                }
-
-                RoundedRectangle(cornerRadius: size * 0.04, style: .continuous)
-                    .fill(KeepCleanPalette.blue)
-                    .frame(width: size * 0.28, height: size * 0.07)
+        Group {
+            if let url = Bundle.main.url(forResource: "brand-mark", withExtension: "png"),
+               let image = NSImage(contentsOf: url) {
+                Image(nsImage: image)
+                    .resizable()
+                    .interpolation(.high)
+                    .scaledToFit()
+            } else {
+                RoundedRectangle(cornerRadius: size * 0.22, style: .continuous)
+                    .fill(KeepCleanPalette.surfaceWarm)
+                    .overlay {
+                        Text("K")
+                            .font(.system(size: size * 0.42, weight: .semibold))
+                            .foregroundStyle(KeepCleanPalette.ink)
+                    }
+                    .overlay {
+                        RoundedRectangle(cornerRadius: size * 0.22, style: .continuous)
+                            .strokeBorder(KeepCleanPalette.border, lineWidth: 1)
+                    }
             }
-            .offset(y: size * 0.02)
-
-            KeepCleanSparkle()
-                .fill(KeepCleanPalette.orange)
-                .frame(width: size * 0.14, height: size * 0.14)
-                .offset(x: size * 0.22, y: -size * 0.18)
         }
         .frame(width: size, height: size)
-        .shadow(color: Color.black.opacity(0.08), radius: size * 0.06, x: 0, y: size * 0.03)
         .accessibilityHidden(true)
-    }
-
-    private func key(size: CGFloat) -> some View {
-        RoundedRectangle(cornerRadius: size * 0.32, style: .continuous)
-            .fill(KeepCleanPalette.ink.opacity(0.18))
-            .frame(width: size, height: size)
-    }
-}
-
-private struct KeepCleanSparkle: Shape {
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        let center = CGPoint(x: rect.midX, y: rect.midY)
-
-        path.move(to: CGPoint(x: center.x, y: rect.minY))
-        path.addLine(to: CGPoint(x: center.x + rect.width * 0.18, y: center.y - rect.height * 0.18))
-        path.addLine(to: CGPoint(x: rect.maxX, y: center.y))
-        path.addLine(to: CGPoint(x: center.x + rect.width * 0.18, y: center.y + rect.height * 0.18))
-        path.addLine(to: CGPoint(x: center.x, y: rect.maxY))
-        path.addLine(to: CGPoint(x: center.x - rect.width * 0.18, y: center.y + rect.height * 0.18))
-        path.addLine(to: CGPoint(x: rect.minX, y: center.y))
-        path.addLine(to: CGPoint(x: center.x - rect.width * 0.18, y: center.y - rect.height * 0.18))
-        path.closeSubpath()
-        return path
     }
 }

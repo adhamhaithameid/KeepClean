@@ -33,13 +33,13 @@ struct RootTabsView: View {
 
     private var header: some View {
         HStack(spacing: 14) {
-            KeepCleanBrandMark(size: 40)
+            KeepCleanBrandMark(size: 34)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text("KeepClean")
-                    .font(.system(size: 26, weight: .semibold))
+                    .font(.system(size: 24, weight: .semibold))
                     .foregroundStyle(KeepCleanPalette.ink)
-                Text(currentSubtitle)
+                Text("Built-in keyboard and trackpad cleaning.")
                     .font(.subheadline)
                     .foregroundStyle(KeepCleanPalette.mutedInk)
             }
@@ -70,17 +70,6 @@ struct RootTabsView: View {
                         .strokeBorder(KeepCleanPalette.border, lineWidth: 1)
                 }
         )
-    }
-
-    private var currentSubtitle: String {
-        switch model.selectedTab {
-        case .clean:
-            "Built-in keyboard and trackpad cleaning."
-        case .settings:
-            "Timing and launch preferences."
-        case .about:
-            "Project details and links."
-        }
     }
 
     private var currentPillText: String {

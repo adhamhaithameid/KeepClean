@@ -7,34 +7,19 @@ struct AboutTabView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
-                infoPanel
                 linksPanel
                 creditsPanel
             }
         }
     }
 
-    private var infoPanel: some View {
-        KeepCleanPanel {
-            HStack(alignment: .center, spacing: 16) {
-                KeepCleanBrandMark(size: 52)
-
-                VStack(alignment: .leading, spacing: 4) {
-                    KeepCleanSectionEyebrow(text: "About")
-                    Text("KeepClean")
-                        .font(.system(size: 24, weight: .semibold))
-                        .foregroundStyle(KeepCleanPalette.ink)
-                    Text("A small offline Mac utility for cleaning the built-in keyboard and trackpad.")
-                        .font(.body)
-                        .foregroundStyle(KeepCleanPalette.mutedInk)
-                }
-            }
-        }
-    }
-
     private var linksPanel: some View {
         KeepCleanPanel {
-            KeepCleanSectionEyebrow(text: "Links")
+            KeepCleanSectionEyebrow(text: "About")
+
+            Text("A small offline Mac utility for cleaning the built-in keyboard and trackpad.")
+                .font(.body)
+                .foregroundStyle(KeepCleanPalette.mutedInk)
 
             HStack(alignment: .top, spacing: 18) {
                 Button {
