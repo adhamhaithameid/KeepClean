@@ -5,8 +5,8 @@ struct KeepCleanAmbientBackground: View {
     var body: some View {
         LinearGradient(
             colors: [
-                Color(nsColor: .windowBackgroundColor),
-                KeepCleanPalette.surface,
+                Color(red: 0.95, green: 0.96, blue: 0.98),
+                Color(red: 0.98, green: 0.98, blue: 0.99),
             ],
             startPoint: .top,
             endPoint: .bottom
