@@ -1,0 +1,11 @@
+.DS_Store
+.build
+.derived-data
+.swift-build
+.logic-checks
+dist
+xcuserdata/
+DerivedData/
+KeepClean.xcodeproj/project.xcworkspace/xcuserdata/
+KeepClean.xcodeproj/xcuserdata/
+*.xcresult
