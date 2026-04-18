@@ -79,6 +79,8 @@ build_with_swiftc() {
   cp "$HELPER_BINARY" "$APP_HELPERS/KeepCleanHelper"
   chmod +x "$APP_MACOS/$APP_NAME" "$APP_HELPERS/KeepCleanHelper"
   cp "$ROOT_DIR/KeepClean/Resources/profile.png" "$APP_RESOURCES/profile.png"
+  cp "$ROOT_DIR/KeepClean/Resources/brand-mark.png" "$APP_RESOURCES/brand-mark.png"
+  cp "$ROOT_DIR/KeepClean/Resources/KeepClean.icns" "$APP_RESOURCES/KeepClean.icns"
   cat >"$INFO_PLIST" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -88,6 +90,8 @@ build_with_swiftc() {
   <string>$APP_NAME</string>
   <key>CFBundleExecutable</key>
   <string>$APP_NAME</string>
+  <key>CFBundleIconFile</key>
+  <string>KeepClean</string>
   <key>CFBundleIdentifier</key>
   <string>com.adhamhaithameid.keepclean</string>
   <key>CFBundleInfoDictionaryVersion</key>
