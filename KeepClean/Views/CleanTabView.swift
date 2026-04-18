@@ -5,154 +5,103 @@ struct CleanTabView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                heroPanel
-
-                if let remainingTimedLockSeconds = model.remainingTimedLockSeconds {
-                    countdownPanel(remainingTimedLockSeconds)
-                }
-
-                actionPanel
+            VStack(alignment: .leading, spacing: 14) {
+                overviewPanel
 
                 if let autoStartCountdown = model.autoStartCountdownSecondsRemaining {
                     autoStartPanel(autoStartCountdown)
                 }
 
+                if let remainingTimedLockSeconds = model.remainingTimedLockSeconds {
+                    countdownPanel(remainingTimedLockSeconds)
+                }
+
+                actionsPanel
                 safetyPanel
             }
         }
     }
 
-    private var heroPanel: some View {
-        KeepCleanPanel(accent: KeepCleanPalette.sky) {
-            KeepCleanSectionEyebrow(text: "Built-in cleaning")
-            Text("Pick the safest cleaning mode for this moment.")
-                .font(.system(size: 30, weight: .bold, design: .rounded))
+    private var overviewPanel: some View {
+        KeepCleanPanel {
+            KeepCleanSectionEyebrow(text: "Built-in inputs")
+            Text("Clean your keyboard and trackpad without guessing.")
+                .font(.system(size: 24, weight: .semibold))
                 .foregroundStyle(KeepCleanPalette.ink)
 
             Text(model.statusMessage)
-                .font(.headline)
-                .foregroundStyle(KeepCleanPalette.ink.opacity(0.72))
+                .font(.body)
+                .foregroundStyle(KeepCleanPalette.mutedInk)
 
             if let errorMessage = model.errorMessage {
                 Text(errorMessage)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(KeepCleanPalette.warning)
-                    .padding(16)
+                    .font(.subheadline)
+                    .foregroundStyle(KeepCleanPalette.orange)
+                    .padding(12)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .fill(KeepCleanPalette.warning.opacity(0.10))
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .fill(KeepCleanPalette.orange.opacity(0.10))
                     )
             }
         }
     }
 
-    private var actionPanel: some View {
-        KeepCleanPanel(accent: KeepCleanPalette.amber) {
+    private var actionsPanel: some View {
+        KeepCleanPanel {
             KeepCleanSectionEyebrow(text: "Actions")
 
-            ViewThatFits(in: .horizontal) {
-                HStack(alignment: .top, spacing: 16) {
-                    keyboardActionCard
-                    fullCleanActionCard
-                }
-
-                VStack(spacing: 16) {
-                    keyboardActionCard
-                    fullCleanActionCard
-                }
-            }
-        }
-    }
-
-    private var keyboardActionCard: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack {
-                Label("Keyboard only", systemImage: "keyboard")
-                    .font(.title3.weight(.semibold))
-                    .foregroundStyle(KeepCleanPalette.ink)
-                Spacer()
-                KeepCleanStatusPill(
-                    text: model.activeSession?.target == .keyboard ? "Keyboard locked" : "Trackpad stays live",
-                    tint: model.activeSession?.target == .keyboard ? KeepCleanPalette.sky : KeepCleanPalette.success
+            VStack(alignment: .leading, spacing: 10) {
+                actionHeader(
+                    title: "Disable Keyboard",
+                    subtitle: "Keeps the built-in trackpad active so you can turn it back on.",
+                    status: model.activeSession?.target == .keyboard ? "Keyboard disabled" : "Trackpad stays active",
+                    tint: model.activeSession?.target == .keyboard ? KeepCleanPalette.blue : KeepCleanPalette.success
                 )
+
+                Button(model.keyboardButtonTitle) {
+                    Task {
+                        await model.toggleKeyboardLock()
+                    }
+                }
+                .buttonStyle(KeepCleanActionButtonStyle(tint: KeepCleanPalette.blue))
+                .disabled(!model.canTriggerKeyboardAction)
+                .accessibilityIdentifier("clean.disableKeyboard")
             }
 
-            Text("Best when you want immediate control while keeping the built-in trackpad active for recovery.")
-                .font(.subheadline)
-                .foregroundStyle(KeepCleanPalette.ink.opacity(0.68))
+            Divider()
 
-            Button {
-                Task {
-                    await model.toggleKeyboardLock()
-                }
-            } label: {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(model.keyboardButtonTitle)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    Text("Built-in trackpad remains available")
-                        .font(.subheadline.weight(.medium))
-                        .foregroundStyle(Color.white.opacity(0.84))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-            }
-            .buttonStyle(KeepCleanActionButtonStyle(tint: KeepCleanPalette.sky))
-            .disabled(!model.canTriggerKeyboardAction)
-            .accessibilityIdentifier("clean.disableKeyboard")
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private var fullCleanActionCard: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack {
-                Label("Full clean", systemImage: "sparkles.rectangle.stack")
-                    .font(.title3.weight(.semibold))
-                    .foregroundStyle(KeepCleanPalette.ink)
-                Spacer()
-                KeepCleanStatusPill(
-                    text: "\(model.settings.fullCleanDurationSeconds)s auto-release",
-                    tint: KeepCleanPalette.amber
+            VStack(alignment: .leading, spacing: 10) {
+                actionHeader(
+                    title: "Disable Keyboard + Trackpad",
+                    subtitle: "Uses the helper process and always restores input after the timer ends.",
+                    status: "\(model.settings.fullCleanDurationSeconds) second timer",
+                    tint: KeepCleanPalette.orange
                 )
-            }
 
-            Text("Use the helper-owned timed lock when you need a strict cleaning window for both the keyboard and trackpad.")
-                .font(.subheadline)
-                .foregroundStyle(KeepCleanPalette.ink.opacity(0.68))
-
-            Button {
-                Task {
-                    await model.startTimedFullClean()
+                Button(model.fullCleanButtonTitle) {
+                    Task {
+                        await model.startTimedFullClean()
+                    }
                 }
-            } label: {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(model.fullCleanButtonTitle)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    Text("Strict timer with automatic recovery")
-                        .font(.subheadline.weight(.medium))
-                        .foregroundStyle(Color.white.opacity(0.84))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
+                .buttonStyle(KeepCleanActionButtonStyle(tint: KeepCleanPalette.orange))
+                .disabled(!model.canTriggerTimedAction)
+                .accessibilityIdentifier("clean.disableKeyboardAndTrackpad")
             }
-            .buttonStyle(KeepCleanActionButtonStyle(tint: KeepCleanPalette.warning))
-            .disabled(!model.canTriggerTimedAction)
-            .accessibilityIdentifier("clean.disableKeyboardAndTrackpad")
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func autoStartPanel(_ seconds: Int) -> some View {
-        KeepCleanPanel(accent: KeepCleanPalette.amber) {
-            KeepCleanSectionEyebrow(text: "Launch countdown")
-            Text("Keyboard disabling in \(seconds) seconds.")
-                .font(.title2.weight(.bold))
+        KeepCleanPanel {
+            KeepCleanSectionEyebrow(text: "Auto-start")
+            Text("Keyboard disable starts in \(seconds) seconds.")
+                .font(.headline)
                 .foregroundStyle(KeepCleanPalette.ink)
                 .accessibilityIdentifier("clean.autoStartCountdown")
 
-            Text("Use the trackpad to cancel before the keyboard-only lock begins.")
+            Text("Cancel now if you opened the app by mistake.")
                 .font(.subheadline)
-                .foregroundStyle(KeepCleanPalette.ink.opacity(0.68))
+                .foregroundStyle(KeepCleanPalette.mutedInk)
 
             Button("Cancel Auto-Start") {
                 model.cancelAutoStart()
@@ -164,24 +113,23 @@ struct CleanTabView: View {
     }
 
     private func countdownPanel(_ remainingTimedLockSeconds: Int) -> some View {
-        KeepCleanPanel(accent: KeepCleanPalette.warning) {
-            KeepCleanSectionEyebrow(text: "Timed session")
-            HStack(alignment: .bottom, spacing: 18) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Full clean active")
-                        .font(.title2.weight(.bold))
+        KeepCleanPanel {
+            HStack(alignment: .firstTextBaseline) {
+                VStack(alignment: .leading, spacing: 4) {
+                    KeepCleanSectionEyebrow(text: "Timed clean")
+                    Text("Full clean is active.")
+                        .font(.headline)
                         .foregroundStyle(KeepCleanPalette.ink)
-
-                    Text("Keyboard and trackpad will come back automatically.")
+                    Text("Keyboard and trackpad will return automatically.")
                         .font(.subheadline)
-                        .foregroundStyle(KeepCleanPalette.ink.opacity(0.68))
+                        .foregroundStyle(KeepCleanPalette.mutedInk)
                 }
 
                 Spacer()
 
                 Text("\(remainingTimedLockSeconds)s")
-                    .font(.system(size: 52, weight: .bold, design: .rounded))
-                    .foregroundStyle(KeepCleanPalette.warning)
+                    .font(.system(size: 30, weight: .semibold, design: .rounded))
+                    .foregroundStyle(KeepCleanPalette.orange)
             }
         }
     }
@@ -189,27 +137,42 @@ struct CleanTabView: View {
     private var safetyPanel: some View {
         KeepCleanPanel {
             KeepCleanSectionEyebrow(text: "Safety")
-            Text("KeepClean always favors recovery over cleverness.")
-                .font(.title3.weight(.bold))
-                .foregroundStyle(KeepCleanPalette.ink)
 
-            VStack(alignment: .leading, spacing: 10) {
-                safetyRow(symbol: "hand.point.up.left.fill", text: "Keyboard-only mode keeps the built-in trackpad active so you can re-enable it.")
-                safetyRow(symbol: "timer", text: "Full clean mode always restores the keyboard and trackpad automatically.")
-                safetyRow(symbol: "wifi.slash", text: "The app stays offline. Links only open when you tap the About tab buttons.")
+            VStack(alignment: .leading, spacing: 8) {
+                safetyRow("Keyboard-only mode never disables the built-in trackpad.")
+                safetyRow("Full clean mode always restores the keyboard and trackpad automatically.")
+                safetyRow("KeepClean stays offline. Links only open when you use the About tab buttons.")
             }
         }
     }
 
-    private func safetyRow(symbol: String, text: String) -> some View {
-        HStack(alignment: .top, spacing: 12) {
-            Image(systemName: symbol)
-                .foregroundStyle(KeepCleanPalette.sky)
-                .frame(width: 18)
+    private func actionHeader(title: String, subtitle: String, status: String, tint: Color) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(title)
+                    .font(.headline)
+                    .foregroundStyle(KeepCleanPalette.ink)
+
+                Spacer()
+
+                KeepCleanStatusPill(text: status, tint: tint)
+            }
+
+            Text(subtitle)
+                .font(.subheadline)
+                .foregroundStyle(KeepCleanPalette.mutedInk)
+        }
+    }
+
+    private func safetyRow(_ text: String) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: 13))
+                .foregroundStyle(KeepCleanPalette.blue)
 
             Text(text)
                 .font(.subheadline)
-                .foregroundStyle(KeepCleanPalette.ink.opacity(0.72))
+                .foregroundStyle(KeepCleanPalette.mutedInk)
         }
     }
 }
