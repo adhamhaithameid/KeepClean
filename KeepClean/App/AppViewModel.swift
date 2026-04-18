@@ -9,6 +9,7 @@ final class AppViewModel {
     var selectedTab: AppTab = .clean
     var activeSession: LockSession?
     var errorMessage: String?
+    var shouldOfferPrivacyAndSecurityHelp = false
     var statusMessage = "Preparing built-in input detection…"
     var remainingTimedLockSeconds: Int?
     var autoStartCountdownSecondsRemaining: Int?
@@ -72,7 +73,11 @@ final class AppViewModel {
             statusMessage = await inputController.availabilitySummary()
         }
 
-        if launchOverrides.forceAutoStartOn || settings.autoStartKeyboardDisableOnLaunch {
+        if launchOverrides.forceTimedFullCleanOn {
+            Task {
+                await startTimedFullClean()
+            }
+        } else if launchOverrides.forceAutoStartOn || settings.autoStartKeyboardDisableOnLaunch {
             beginAutoStartCountdown()
         }
     }
@@ -86,13 +91,21 @@ final class AppViewModel {
             await mockTimedLease?.release()
         }
 
+        lockCoordinator.clear()
         helperProcess = nil
         manualKeyboardLease = nil
         mockTimedLease = nil
+        activeSession = nil
+        remainingTimedLockSeconds = nil
+        autoStartCountdownSecondsRemaining = nil
+        errorMessage = nil
+        shouldOfferPrivacyAndSecurityHelp = false
+        statusMessage = "KeepClean closed. Built-in input remains available."
     }
 
     func toggleKeyboardLock() async {
         errorMessage = nil
+        shouldOfferPrivacyAndSecurityHelp = false
         autoStartTask?.cancel()
         autoStartCountdownSecondsRemaining = nil
 
@@ -111,8 +124,7 @@ final class AppViewModel {
             activeSession = lockCoordinator.beginManual(target: .keyboard, owner: .app)
             statusMessage = "Keyboard disabled. The built-in trackpad stays active so you can re-enable it."
         } catch {
-            errorMessage = error.localizedDescription
-            statusMessage = await inputController.availabilitySummary()
+            present(error: error, availability: await inputController.availabilitySummary())
         }
     }
 
@@ -122,6 +134,7 @@ final class AppViewModel {
         }
 
         errorMessage = nil
+        shouldOfferPrivacyAndSecurityHelp = false
         autoStartTask?.cancel()
         autoStartCountdownSecondsRemaining = nil
 
@@ -138,7 +151,7 @@ final class AppViewModel {
                 startTimedCountdown(until: session.endsAt, releaseMockLeaseOnCompletion: true)
                 statusMessage = "Keyboard and trackpad disabled for cleaning."
             } catch {
-                errorMessage = error.localizedDescription
+                present(error: error, availability: await inputController.availabilitySummary())
             }
             return
         }
@@ -166,13 +179,13 @@ final class AppViewModel {
                     self.helperProcess = nil
                     if process.terminationStatus != 0, self.remainingTimedLockSeconds != nil {
                         self.errorMessage = "The cleaning helper exited early."
+                        self.shouldOfferPrivacyAndSecurityHelp = false
                         self.finishTimedSession()
                     }
                 }
             }
         } catch {
-            errorMessage = error.localizedDescription
-            statusMessage = await inputController.availabilitySummary()
+            present(error: error, availability: await inputController.availabilitySummary())
         }
     }
 
@@ -184,6 +197,10 @@ final class AppViewModel {
 
     func open(_ link: ExternalLink) {
         linkOpener.open(link.url)
+    }
+
+    func openPrivacyAndSecurity() {
+        linkOpener.open(SystemSettingsLink.privacyAndSecurity.url)
     }
 
     private func beginAutoStartCountdown() {
@@ -253,10 +270,30 @@ final class AppViewModel {
         helperProcess = nil
         lockCoordinator.clear()
         activeSession = nil
+        shouldOfferPrivacyAndSecurityHelp = false
         statusMessage = "Built-in input is available again."
     }
 
     private func secondsUntil(_ endDate: Date) -> Int {
         max(Int(ceil(endDate.timeIntervalSinceNow)), 0)
+    }
+
+    private func present(error: Error, availability: String) {
+        errorMessage = error.localizedDescription
+        shouldOfferPrivacyAndSecurityHelp = recommendsPrivacyAndSecurityHelp(for: error)
+        statusMessage = availability
+    }
+
+    private func recommendsPrivacyAndSecurityHelp(for error: Error) -> Bool {
+        guard let keepCleanError = error as? KeepCleanError else {
+            return false
+        }
+
+        switch keepCleanError {
+        case .permissionDenied, .devicesUnavailable, .keyboardUnavailable, .trackpadUnavailable, .seizeFailed:
+            return true
+        case .helperMissing, .invalidHelperArguments:
+            return false
+        }
     }
 }

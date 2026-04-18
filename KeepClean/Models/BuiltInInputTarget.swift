@@ -5,6 +5,14 @@ enum BuiltInInputTarget: String, Codable, Equatable, Sendable {
     case trackpad
     case keyboardAndTrackpad
 
+    var includesKeyboard: Bool {
+        self == .keyboard || self == .keyboardAndTrackpad
+    }
+
+    var includesTrackpad: Bool {
+        self == .trackpad || self == .keyboardAndTrackpad
+    }
+
     var buttonTitle: String {
         switch self {
         case .keyboard:

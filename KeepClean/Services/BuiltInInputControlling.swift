@@ -6,6 +6,10 @@ protocol BuiltInInputControlling: Actor {
     func lock(target: BuiltInInputTarget) async throws -> InputLockLease
 }
 
+protocol InputLockResource: AnyObject {
+    func releaseLock()
+}
+
 actor InputLockLease {
     let target: BuiltInInputTarget
     private var retainedObjects: [AnyObject]?
@@ -16,6 +20,9 @@ actor InputLockLease {
     }
 
     func release() {
+        retainedObjects?.forEach { object in
+            (object as? InputLockResource)?.releaseLock()
+        }
         retainedObjects = nil
     }
 }
