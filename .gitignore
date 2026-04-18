@@ -1,11 +1,14 @@
 .DS_Store
 .build
 .derived-data
+.derived-data-release
 .swift-build
 .logic-checks
+.release-checks
 .brand-build
 .generated-brand-assets
 dist
+release
 xcuserdata/
 DerivedData/
 KeepClean.xcodeproj/project.xcworkspace/xcuserdata/

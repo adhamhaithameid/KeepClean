@@ -25,6 +25,8 @@ build_with_xcode() {
   local xcode_app_bundle="$DERIVED_DATA/Build/Products/Debug/$APP_NAME.app"
   local xcode_app_binary="$xcode_app_bundle/Contents/MacOS/$APP_NAME"
 
+  rm -rf "$xcode_app_bundle"
+
   if xcodebuild \
     -project "$PROJECT_PATH" \
     -scheme "$APP_NAME" \
@@ -79,7 +81,6 @@ build_with_swiftc() {
   cp "$HELPER_BINARY" "$APP_HELPERS/KeepCleanHelper"
   chmod +x "$APP_MACOS/$APP_NAME" "$APP_HELPERS/KeepCleanHelper"
   cp "$ROOT_DIR/KeepClean/Resources/profile.png" "$APP_RESOURCES/profile.png"
-  cp "$ROOT_DIR/KeepClean/Resources/brand-mark.png" "$APP_RESOURCES/brand-mark.png"
   cp "$ROOT_DIR/KeepClean/Resources/KeepClean.icns" "$APP_RESOURCES/KeepClean.icns"
   cat >"$INFO_PLIST" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
@@ -91,7 +92,7 @@ build_with_swiftc() {
   <key>CFBundleExecutable</key>
   <string>$APP_NAME</string>
   <key>CFBundleIconFile</key>
-  <string>KeepClean</string>
+  <string>KeepClean.icns</string>
   <key>CFBundleIdentifier</key>
   <string>com.adhamhaithameid.keepclean</string>
   <key>CFBundleInfoDictionaryVersion</key>

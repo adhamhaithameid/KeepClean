@@ -24,42 +24,14 @@
          <BuildActionEntry
             buildForTesting = "YES"
             buildForRunning = "YES"
-            buildForProfiling = "NO"
-            buildForArchiving = "NO"
-            buildForAnalyzing = "NO">
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "ACBC06F73251EC626050DC91"
                BuildableName = "KeepCleanHelper"
                BlueprintName = "KeepCleanHelper"
-               ReferencedContainer = "container:KeepClean.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "YES"
-            buildForArchiving = "YES"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "51448EBDA9AB784448EC9946"
-               BuildableName = "KeepCleanTests.xctest"
-               BlueprintName = "KeepCleanTests"
-               ReferencedContainer = "container:KeepClean.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "YES"
-            buildForArchiving = "YES"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "5952E77C32672FB1AF0CC45F"
-               BuildableName = "KeepCleanUITests.xctest"
-               BlueprintName = "KeepCleanUITests"
                ReferencedContainer = "container:KeepClean.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>

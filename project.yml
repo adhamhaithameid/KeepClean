@@ -30,16 +30,36 @@ targets:
       - path: KeepClean/Views
       - path: KeepClean/Support
     resources:
-      - path: KeepClean/Resources
+      - path: KeepClean/Resources/profile.png
+      - path: KeepClean/Resources/KeepClean.icns
+      - path: KeepClean/Resources/Assets.xcassets
     info:
       path: KeepClean/Info.plist
     settings:
       base:
+        INFOPLIST_KEY_CFBundleIconFile: KeepClean.icns
         PRODUCT_BUNDLE_IDENTIFIER: com.adhamhaithameid.keepclean
         PRODUCT_NAME: KeepClean
     dependencies:
       - target: KeepCleanHelper
     postBuildScripts:
+      - name: Copy App Resources
+        script: |
+          set -euo pipefail
+          DEST="$TARGET_BUILD_DIR/$CONTENTS_FOLDER_PATH/Resources"
+          PLIST="$TARGET_BUILD_DIR/$INFOPLIST_PATH"
+          mkdir -p "$DEST"
+          rm -f "$DEST/brand-mark.png"
+          cp "$SRCROOT/KeepClean/Resources/profile.png" "$DEST/profile.png"
+          cp "$SRCROOT/KeepClean/Resources/KeepClean.icns" "$DEST/KeepClean.icns"
+          if /usr/libexec/PlistBuddy -c "Print :CFBundleIconFile" "$PLIST" >/dev/null 2>&1; then
+            /usr/libexec/PlistBuddy -c "Set :CFBundleIconFile KeepClean.icns" "$PLIST"
+          else
+            /usr/libexec/PlistBuddy -c "Add :CFBundleIconFile string KeepClean.icns" "$PLIST"
+          fi
+        outputFiles:
+          - $(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Resources/profile.png
+          - $(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Resources/KeepClean.icns
       - name: Embed Helper
         script: |
           set -euo pipefail
@@ -47,6 +67,8 @@ targets:
           mkdir -p "$DEST"
           cp "$BUILT_PRODUCTS_DIR/KeepCleanHelper" "$DEST/KeepCleanHelper"
           chmod +x "$DEST/KeepCleanHelper"
+        outputFiles:
+          - $(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Helpers/KeepCleanHelper
 
   KeepCleanHelper:
     type: tool
@@ -60,6 +82,7 @@ targets:
       - path: KeepClean/Services/LiveBuiltInInputController.swift
     settings:
       base:
+        OTHER_SWIFT_FLAGS: -parse-as-library
         PRODUCT_BUNDLE_IDENTIFIER: com.adhamhaithameid.keepclean.helper
         PRODUCT_NAME: KeepCleanHelper
 
@@ -73,6 +96,7 @@ targets:
       - target: KeepClean
     settings:
       base:
+        GENERATE_INFOPLIST_FILE: YES
         PRODUCT_BUNDLE_IDENTIFIER: com.adhamhaithameid.keepclean.tests
         TEST_HOST: "$(BUILT_PRODUCTS_DIR)/KeepClean.app/Contents/MacOS/KeepClean"
         BUNDLE_LOADER: "$(TEST_HOST)"
@@ -87,6 +111,7 @@ targets:
       - target: KeepClean
     settings:
       base:
+        GENERATE_INFOPLIST_FILE: YES
         PRODUCT_BUNDLE_IDENTIFIER: com.adhamhaithameid.keepclean.uitests
 
 schemes:
@@ -94,9 +119,7 @@ schemes:
     build:
       targets:
         KeepClean: all
-        KeepCleanHelper: [run, test]
-        KeepCleanTests: test
-        KeepCleanUITests: test
+        KeepCleanHelper: run
     test:
       gatherCoverageData: true
       targets:
