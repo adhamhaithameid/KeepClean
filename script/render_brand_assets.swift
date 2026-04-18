@@ -4,12 +4,12 @@ import AppKit
 import Foundation
 
 struct BrandColor {
-    static let ink = NSColor(calibratedRed: 0.11, green: 0.15, blue: 0.21, alpha: 1.0)
-    static let sky = NSColor(calibratedRed: 0.20, green: 0.49, blue: 0.97, alpha: 1.0)
-    static let skySoft = NSColor(calibratedRed: 0.80, green: 0.89, blue: 1.00, alpha: 1.0)
-    static let amber = NSColor(calibratedRed: 1.00, green: 0.72, blue: 0.25, alpha: 1.0)
-    static let cream = NSColor(calibratedRed: 0.99, green: 0.97, blue: 0.92, alpha: 1.0)
-    static let mist = NSColor(calibratedRed: 0.94, green: 0.96, blue: 1.00, alpha: 1.0)
+    static let ink = NSColor(calibratedRed: 0.16, green: 0.18, blue: 0.22, alpha: 1.0)
+    static let mutedInk = NSColor(calibratedRed: 0.40, green: 0.43, blue: 0.49, alpha: 1.0)
+    static let blue = NSColor(calibratedRed: 0.18, green: 0.46, blue: 0.92, alpha: 1.0)
+    static let orange = NSColor(calibratedRed: 0.95, green: 0.52, blue: 0.19, alpha: 1.0)
+    static let surface = NSColor(calibratedRed: 0.98, green: 0.98, blue: 0.99, alpha: 1.0)
+    static let border = NSColor(calibratedWhite: 0.0, alpha: 0.08)
 }
 
 let arguments = CommandLine.arguments
@@ -32,46 +32,30 @@ let sizes: [(String, CGFloat)] = [
     ("icon_512x512@2x.png", 1024),
 ]
 
-func sweepPath(in rect: CGRect) -> NSBezierPath {
-    let path = NSBezierPath()
-    path.move(to: CGPoint(x: rect.minX + rect.width * 0.08, y: rect.midY))
-    path.curve(
-        to: CGPoint(x: rect.maxX - rect.width * 0.10, y: rect.minY + rect.height * 0.24),
-        controlPoint1: CGPoint(x: rect.minX + rect.width * 0.36, y: rect.minY - rect.height * 0.10),
-        controlPoint2: CGPoint(x: rect.minX + rect.width * 0.72, y: rect.minY + rect.height * 0.02)
-    )
-    path.line(to: CGPoint(x: rect.maxX - rect.width * 0.20, y: rect.minY + rect.height * 0.46))
-    path.curve(
-        to: CGPoint(x: rect.minX + rect.width * 0.14, y: rect.maxY - rect.height * 0.05),
-        controlPoint1: CGPoint(x: rect.minX + rect.width * 0.68, y: rect.maxY + rect.height * 0.05),
-        controlPoint2: CGPoint(x: rect.minX + rect.width * 0.28, y: rect.maxY + rect.height * 0.03)
-    )
-    path.close()
-    return path
-}
-
 func sparklePath(in rect: CGRect) -> NSBezierPath {
     let path = NSBezierPath()
     let center = CGPoint(x: rect.midX, y: rect.midY)
     let points = [
         CGPoint(x: center.x, y: rect.minY),
-        CGPoint(x: center.x + rect.width * 0.17, y: center.y - rect.height * 0.17),
+        CGPoint(x: center.x + rect.width * 0.18, y: center.y - rect.height * 0.18),
         CGPoint(x: rect.maxX, y: center.y),
-        CGPoint(x: center.x + rect.width * 0.17, y: center.y + rect.height * 0.17),
+        CGPoint(x: center.x + rect.width * 0.18, y: center.y + rect.height * 0.18),
         CGPoint(x: center.x, y: rect.maxY),
-        CGPoint(x: center.x - rect.width * 0.17, y: center.y + rect.height * 0.17),
+        CGPoint(x: center.x - rect.width * 0.18, y: center.y + rect.height * 0.18),
         CGPoint(x: rect.minX, y: center.y),
-        CGPoint(x: center.x - rect.width * 0.17, y: center.y - rect.height * 0.17),
+        CGPoint(x: center.x - rect.width * 0.18, y: center.y - rect.height * 0.18),
     ]
-
     path.move(to: points[0])
     points.dropFirst().forEach { path.line(to: $0) }
     path.close()
     return path
 }
 
+func keyPath(in rect: CGRect) -> NSBezierPath {
+    NSBezierPath(roundedRect: rect, xRadius: rect.width * 0.32, yRadius: rect.height * 0.32)
+}
+
 func writePNG(named fileName: String, size: CGFloat) throws {
-    let canvasSize = NSSize(width: size, height: size)
     guard
         let bitmap = NSBitmapImageRep(
             bitmapDataPlanes: nil,
@@ -90,7 +74,7 @@ func writePNG(named fileName: String, size: CGFloat) throws {
         throw NSError(domain: "KeepCleanBrand", code: 1, userInfo: [NSLocalizedDescriptionKey: "Unable to create bitmap context"])
     }
 
-    let canvas = CGRect(origin: .zero, size: canvasSize)
+    let canvas = CGRect(origin: .zero, size: NSSize(width: size, height: size))
     NSGraphicsContext.saveGraphicsState()
     NSGraphicsContext.current = graphicsContext
 
@@ -101,53 +85,61 @@ func writePNG(named fileName: String, size: CGFloat) throws {
     context.clear(canvas)
 
     let shadow = NSShadow()
-    shadow.shadowColor = NSColor(calibratedWhite: 0.0, alpha: 0.12)
-    shadow.shadowBlurRadius = size * 0.10
-    shadow.shadowOffset = NSSize(width: 0, height: -size * 0.04)
+    shadow.shadowColor = NSColor(calibratedWhite: 0.0, alpha: 0.08)
+    shadow.shadowBlurRadius = size * 0.06
+    shadow.shadowOffset = NSSize(width: 0, height: -size * 0.03)
     shadow.set()
 
-    let outer = NSBezierPath(roundedRect: canvas.insetBy(dx: size * 0.06, dy: size * 0.06), xRadius: size * 0.20, yRadius: size * 0.20)
-    let outerGradient = NSGradient(colors: [BrandColor.cream, BrandColor.mist])!
-    outerGradient.draw(in: outer, angle: -35)
+    let tileRect = canvas.insetBy(dx: size * 0.06, dy: size * 0.06)
+    let tile = NSBezierPath(roundedRect: tileRect, xRadius: size * 0.16, yRadius: size * 0.16)
+    BrandColor.surface.setFill()
+    tile.fill()
+    BrandColor.border.setStroke()
+    tile.lineWidth = max(1, size * 0.018)
+    tile.stroke()
 
-    NSColor.white.withAlphaComponent(0.85).setStroke()
-    outer.lineWidth = size * 0.025
-    outer.stroke()
-
-    let innerRect = canvas.insetBy(dx: size * 0.17, dy: size * 0.17)
-    let inner = NSBezierPath(roundedRect: innerRect, xRadius: size * 0.16, yRadius: size * 0.16)
-    let innerGradient = NSGradient(colors: [NSColor.white.withAlphaComponent(0.98), BrandColor.skySoft])!
-    innerGradient.draw(in: inner, angle: -35)
-
-    NSColor(calibratedWhite: 0.0, alpha: 0.10).setStroke()
-    inner.lineWidth = size * 0.02
-    inner.stroke()
-
-    let sweepRect = CGRect(
-        x: canvas.minX + size * 0.20,
-        y: canvas.minY + size * 0.26,
+    let keyboardRect = CGRect(
+        x: canvas.midX - size * 0.28,
+        y: canvas.midY - size * 0.15,
         width: size * 0.56,
-        height: size * 0.44
+        height: size * 0.38
     )
-    BrandColor.sky.setFill()
-    sweepPath(in: sweepRect).fill()
+    let keyboard = NSBezierPath(roundedRect: keyboardRect, xRadius: size * 0.09, yRadius: size * 0.09)
+    BrandColor.ink.withAlphaComponent(0.70).setStroke()
+    keyboard.lineWidth = size * 0.04
+    keyboard.stroke()
 
-    let shineRect = CGRect(
-        x: canvas.minX + size * 0.34,
-        y: canvas.minY + size * 0.34,
-        width: size * 0.32,
-        height: size * 0.22
+    let keySize = size * 0.075
+    let keyRowY = keyboardRect.midY + size * 0.02
+    let keySpacing = size * 0.045
+    let keyStartX = canvas.midX - keySize - keySpacing
+    for index in 0..<3 {
+        let rect = CGRect(
+            x: keyStartX + CGFloat(index) * (keySize + keySpacing),
+            y: keyRowY,
+            width: keySize,
+            height: keySize
+        )
+        BrandColor.ink.withAlphaComponent(0.18).setFill()
+        keyPath(in: rect).fill()
+    }
+
+    let barRect = CGRect(
+        x: canvas.midX - size * 0.14,
+        y: keyboardRect.minY + size * 0.08,
+        width: size * 0.28,
+        height: size * 0.07
     )
-    NSColor.white.withAlphaComponent(0.55).setFill()
-    sweepPath(in: shineRect).fill()
+    BrandColor.blue.setFill()
+    keyPath(in: barRect).fill()
 
     let sparkleRect = CGRect(
-        x: canvas.minX + size * 0.67,
-        y: canvas.minY + size * 0.67,
+        x: canvas.midX + size * 0.15,
+        y: canvas.midY + size * 0.16,
         width: size * 0.14,
         height: size * 0.14
     )
-    BrandColor.amber.setFill()
+    BrandColor.orange.setFill()
     sparklePath(in: sparkleRect).fill()
 
     NSGraphicsContext.restoreGraphicsState()
@@ -164,17 +156,11 @@ for (fileName, size) in sizes {
 }
 
 try FileManager.default.removeItemIfExists(at: markURL)
-try FileManager.default.copyItem(
-    at: iconSetDirectory.appendingPathComponent("icon_512x512@2x.png"),
-    to: markURL
-)
+try FileManager.default.copyItem(at: iconSetDirectory.appendingPathComponent("icon_512x512@2x.png"), to: markURL)
 
 extension FileManager {
     func removeItemIfExists(at url: URL) throws {
-        guard fileExists(atPath: url.path) else {
-            return
-        }
-
+        guard fileExists(atPath: url.path) else { return }
         try removeItem(at: url)
     }
 }
