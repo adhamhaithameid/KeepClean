@@ -21,6 +21,14 @@ if [[ ! -d "$PROJECT_PATH" || "$ROOT_DIR/project.yml" -nt "$PROJECT_PATH" ]]; th
   xcodegen generate --spec "$ROOT_DIR/project.yml" >/dev/null
 fi
 
+# Detect host architecture for the swiftc fallback path.
+ARCH="$(uname -m)"
+case "$ARCH" in
+  arm64) TRIPLE="arm64-apple-macos13.0" ;;
+  x86_64) TRIPLE="x86_64-apple-macos13.0" ;;
+  *) echo "Unsupported architecture: $ARCH" >&2; exit 1 ;;
+esac
+
 build_with_xcode() {
   local xcode_app_bundle="$DERIVED_DATA/Build/Products/Debug/$APP_NAME.app"
   local xcode_app_binary="$xcode_app_bundle/Contents/MacOS/$APP_NAME"
@@ -54,11 +62,13 @@ build_with_swiftc() {
 
   mkdir -p "$SWIFT_BUILD_DIR"
 
+  # Build KeepCleanHelper (command-line tool)
+  # Note: CoreHID is Apple Silicon-only and not actually imported by the
+  # helper; avoid linking it so the build succeeds on Intel Macs too.
   xcrun swiftc \
     -parse-as-library \
     -sdk "$SDKROOT" \
-    -target arm64-apple-macos15.0 \
-    -framework CoreHID \
+    -target "$TRIPLE" \
     -o "$HELPER_BINARY" \
     "$ROOT_DIR/KeepCleanHelper/main.swift" \
     $(find "$ROOT_DIR/KeepClean/Models" -name '*.swift' | sort) \
@@ -66,12 +76,12 @@ build_with_swiftc() {
     "$ROOT_DIR/KeepClean/Services/BuiltInInputControlling.swift" \
     "$ROOT_DIR/KeepClean/Services/LiveBuiltInInputController.swift"
 
+  # Build main app
   xcrun swiftc \
     -sdk "$SDKROOT" \
-    -target arm64-apple-macos15.0 \
+    -target "$TRIPLE" \
     -framework SwiftUI \
     -framework AppKit \
-    -framework CoreHID \
     -o "$APP_BINARY" \
     $(find "$ROOT_DIR/KeepClean" -name '*.swift' | sort)
 
@@ -80,8 +90,14 @@ build_with_swiftc() {
   cp "$APP_BINARY" "$APP_MACOS/$APP_NAME"
   cp "$HELPER_BINARY" "$APP_HELPERS/KeepCleanHelper"
   chmod +x "$APP_MACOS/$APP_NAME" "$APP_HELPERS/KeepCleanHelper"
+
+  # Copy resources
   cp "$ROOT_DIR/KeepClean/Resources/profile.png" "$APP_RESOURCES/profile.png"
   cp "$ROOT_DIR/KeepClean/Resources/KeepClean.icns" "$APP_RESOURCES/KeepClean.icns"
+  if [[ -f "$ROOT_DIR/KeepClean/Resources/brand-mark.png" ]]; then
+    cp "$ROOT_DIR/KeepClean/Resources/brand-mark.png" "$APP_RESOURCES/brand-mark.png"
+  fi
+
   cat >"$INFO_PLIST" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -106,9 +122,13 @@ build_with_swiftc() {
   <key>CFBundleVersion</key>
   <string>1</string>
   <key>LSMinimumSystemVersion</key>
-  <string>15.0</string>
+  <string>13.0</string>
   <key>NSPrincipalClass</key>
   <string>NSApplication</string>
+  <key>NSAccessibilityUsageDescription</key>
+  <string>KeepClean needs Accessibility access to intercept and suppress built-in keyboard events during cleaning sessions.</string>
+  <key>NSInputMonitoringUsageDescription</key>
+  <string>KeepClean needs Input Monitoring access to temporarily disable the built-in trackpad during cleaning sessions.</string>
 </dict>
 </plist>
 PLIST

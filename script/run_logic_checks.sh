@@ -10,7 +10,7 @@ mkdir -p "$TMP_DIR"
 
 xcrun swiftc \
   -sdk "$SDKROOT" \
-  -target arm64-apple-macos15.0 \
+  -target arm64-apple-macos13.0 \
   -o "$TMP_DIR/logic-checks" \
   "$ROOT_DIR/script/verify_logic.swift" \
   $(find "$ROOT_DIR/KeepClean/Models" -name '*.swift' | sort)
