@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	    KeepClean is NOT sandboxed so it can:
+	      1. Create a CGEvent tap to suppress keyboard events (requires Accessibility TCC)
+	      2. Seize the built-in trackpad via IOHIDDeviceOpen (requires Input Monitoring TCC)
+	    Both permissions are requested at runtime via the Privacy & Security pane.
+	    Hardened Runtime is enabled in the build settings which is why this file exists.
+	-->
+	<key>com.apple.security.app-sandbox</key>
+	<false/>
+</dict>
+</plist>

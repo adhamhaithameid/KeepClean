@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	    KeepCleanHelper (command-line tool) is not sandboxed.
+	    It inherits TCC permissions from the parent app bundle.
+	    Hardened Runtime is required. The helper seizes the built-in
+	    trackpad via IOHIDDeviceOpen and blocks keyboard events
+	    via CGEvent tap, both gated by TCC.
+	-->
+	<key>com.apple.security.app-sandbox</key>
+	<false/>
+</dict>
+</plist>

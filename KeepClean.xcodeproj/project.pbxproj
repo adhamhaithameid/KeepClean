@@ -13,6 +13,7 @@
 		077C0FDD24B5732C550CD57D /* MockBuiltInInputController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35B728D356738E23FEF6D5C /* MockBuiltInInputController.swift */; };
 		0F336166243AD818DCD94011 /* HelperLaunchRequestTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B338B5BCF70DF5722CC8AA31 /* HelperLaunchRequestTests.swift */; };
 		1BDA859D5A2C2915A7EA60AE /* HelperProcessLauncher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6871657FF23EFC531C7AB90D /* HelperProcessLauncher.swift */; };
+		20D24130DD1506C1C3F8B756 /* PermissionSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E585E381BF8F88D545E82A49 /* PermissionSetupView.swift */; };
 		2324269B0647535481EB8375 /* AppError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8DB2665DD38884B48BCE3861 /* AppError.swift */; };
 		24E39DD40DA8EE71C30B3F52 /* AppTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = E46996F6F3EC75B313B3E35E /* AppTab.swift */; };
 		2A57F07D19AF72B0E6F49A4D /* LockStateCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F017431F2E8991B003534B7 /* LockStateCoordinatorTests.swift */; };
@@ -41,6 +42,7 @@
 		9386B6F243D800831555FB34 /* ExternalLinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F3722E4D45F35666539F48E /* ExternalLinks.swift */; };
 		951AABC8377507A4ABD7BF5D /* BuiltInInputControlling.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDAB42D63D6145D4DD57ECBF /* BuiltInInputControlling.swift */; };
 		9DBD3307E6ECC51E0DB3589E /* BuiltInInputTarget.swift in Sources */ = {isa = PBXBuildFile; fileRef = A35C02A602E20151E9693BA4 /* BuiltInInputTarget.swift */; };
+		9E59B9613F7CE6CD63A6DB69 /* PermissionSetupViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20F242461A0A0CD85AAD6E1A /* PermissionSetupViewModel.swift */; };
 		AAD70A5728A7CBD3BD04457D /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBE486028336438151FF6FE1 /* main.swift */; };
 		B22B3DD53A11491E1F9A877E /* AppSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBF4CF3C11E67D921BD7E802 /* AppSettingsTests.swift */; };
 		B40D9CD2ABF68FD4F91541B8 /* SystemSettingsLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A75290A965A0AC9B363DFC4 /* SystemSettingsLink.swift */; };
@@ -89,7 +91,9 @@
 		14D233679998269656089ABC /* SystemSettingsLinkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemSettingsLinkTests.swift; sourceTree = "<group>"; };
 		1EA587553C9332119C83BCE2 /* LiveBuiltInInputController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveBuiltInInputController.swift; sourceTree = "<group>"; };
 		1F3722E4D45F35666539F48E /* ExternalLinks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalLinks.swift; sourceTree = "<group>"; };
+		20F242461A0A0CD85AAD6E1A /* PermissionSetupViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionSetupViewModel.swift; sourceTree = "<group>"; };
 		2A75290A965A0AC9B363DFC4 /* SystemSettingsLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemSettingsLink.swift; sourceTree = "<group>"; };
+		3153E0C2CFF2028376ECE500 /* KeepCleanHelper.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = KeepCleanHelper.entitlements; sourceTree = "<group>"; };
 		347A450BFCD9355DE0C06418 /* KeepCleanBranding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeepCleanBranding.swift; sourceTree = "<group>"; };
 		362B6A4564A050212DA40827 /* KeepCleanHelper */ = {isa = PBXFileReference; includeInIndex = 0; path = KeepCleanHelper; sourceTree = BUILT_PRODUCTS_DIR; };
 		37A0472C92B098CCF78DC12C /* LockSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockSession.swift; sourceTree = "<group>"; };
@@ -122,6 +126,7 @@
 		DDAB42D63D6145D4DD57ECBF /* BuiltInInputControlling.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuiltInInputControlling.swift; sourceTree = "<group>"; };
 		E0D07DF242A5E20B98E6696A /* AboutTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AboutTabView.swift; sourceTree = "<group>"; };
 		E46996F6F3EC75B313B3E35E /* AppTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTab.swift; sourceTree = "<group>"; };
+		E585E381BF8F88D545E82A49 /* PermissionSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermissionSetupView.swift; sourceTree = "<group>"; };
 		E9FB521F23A24AF2D163FAAB /* BuiltInDeviceMatcherTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuiltInDeviceMatcherTests.swift; sourceTree = "<group>"; };
 		EAD22B449A5FA8F7FF9E6CE6 /* ExternalLinkTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalLinkTests.swift; sourceTree = "<group>"; };
 		F2FE6F7B9F9EC5F6598BFFEB /* LaunchOverrides.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchOverrides.swift; sourceTree = "<group>"; };
@@ -149,6 +154,7 @@
 				AE31985105A45FF53270C265 /* AppEnvironment.swift */,
 				6EEA09D82A1B9B4CCBA9FD01 /* AppViewModel.swift */,
 				FD27FE218CC3FC76FA4F4C15 /* KeepCleanApp.swift */,
+				20F242461A0A0CD85AAD6E1A /* PermissionSetupViewModel.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -233,6 +239,7 @@
 				920DE68CCB382FD058CD8295 /* CleanTabView.swift */,
 				347A450BFCD9355DE0C06418 /* KeepCleanBranding.swift */,
 				4B0A71A0E964AABD8A58201F /* KeepCleanDesignSystem.swift */,
+				E585E381BF8F88D545E82A49 /* PermissionSetupView.swift */,
 				400BBF9E44BB9E06D63E2BC4 /* RootTabsView.swift */,
 				039CCEF8F6D399AF417192D9 /* SettingsTabView.swift */,
 			);
@@ -242,6 +249,7 @@
 		F43111AC257F01E7EBA574C8 /* KeepCleanHelper */ = {
 			isa = PBXGroup;
 			children = (
+				3153E0C2CFF2028376ECE500 /* KeepCleanHelper.entitlements */,
 				CBE486028336438151FF6FE1 /* main.swift */,
 			);
 			path = KeepCleanHelper;
@@ -348,6 +356,12 @@
 					5952E77C32672FB1AF0CC45F = {
 						TestTargetID = CD12000AF91C46E029222CB8;
 					};
+					ACBC06F73251EC626050DC91 = {
+						ProvisioningStyle = Automatic;
+					};
+					CD12000AF91C46E029222CB8 = {
+						ProvisioningStyle = Automatic;
+					};
 				};
 			};
 			buildConfigurationList = B20D031EF5D397DD31A917F4 /* Build configuration list for PBXProject "KeepClean" */;
@@ -418,10 +432,11 @@
 			outputPaths = (
 				"$(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Resources/profile.png",
 				"$(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Resources/KeepClean.icns",
+				"$(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Resources/brand-mark.png",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "set -euo pipefail\nDEST=\"$TARGET_BUILD_DIR/$CONTENTS_FOLDER_PATH/Resources\"\nPLIST=\"$TARGET_BUILD_DIR/$INFOPLIST_PATH\"\nmkdir -p \"$DEST\"\nrm -f \"$DEST/brand-mark.png\"\ncp \"$SRCROOT/KeepClean/Resources/profile.png\" \"$DEST/profile.png\"\ncp \"$SRCROOT/KeepClean/Resources/KeepClean.icns\" \"$DEST/KeepClean.icns\"\nif /usr/libexec/PlistBuddy -c \"Print :CFBundleIconFile\" \"$PLIST\" >/dev/null 2>&1; then\n  /usr/libexec/PlistBuddy -c \"Set :CFBundleIconFile KeepClean.icns\" \"$PLIST\"\nelse\n  /usr/libexec/PlistBuddy -c \"Add :CFBundleIconFile string KeepClean.icns\" \"$PLIST\"\nfi\n";
+			shellScript = "set -euo pipefail\nDEST=\"$TARGET_BUILD_DIR/$CONTENTS_FOLDER_PATH/Resources\"\nPLIST=\"$TARGET_BUILD_DIR/$INFOPLIST_PATH\"\nmkdir -p \"$DEST\"\ncp \"$SRCROOT/KeepClean/Resources/profile.png\" \"$DEST/profile.png\"\ncp \"$SRCROOT/KeepClean/Resources/KeepClean.icns\" \"$DEST/KeepClean.icns\"\ncp \"$SRCROOT/KeepClean/Resources/brand-mark.png\" \"$DEST/brand-mark.png\"\nif /usr/libexec/PlistBuddy -c \"Print :CFBundleIconFile\" \"$PLIST\" >/dev/null 2>&1; then\n  /usr/libexec/PlistBuddy -c \"Set :CFBundleIconFile KeepClean.icns\" \"$PLIST\"\nelse\n  /usr/libexec/PlistBuddy -c \"Add :CFBundleIconFile string KeepClean.icns\" \"$PLIST\"\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -453,6 +468,8 @@
 				339A6FB6754F17E0B1291373 /* LockSession.swift in Sources */,
 				D06014ABE6D3E041B0260ED9 /* LockStateCoordinator.swift in Sources */,
 				077C0FDD24B5732C550CD57D /* MockBuiltInInputController.swift in Sources */,
+				20D24130DD1506C1C3F8B756 /* PermissionSetupView.swift in Sources */,
+				9E59B9613F7CE6CD63A6DB69 /* PermissionSetupViewModel.swift in Sources */,
 				E9F085FA334067A601961C89 /* RootTabsView.swift in Sources */,
 				B4954134D87EEDFC5D1AEE7E /* SettingsTabView.swift in Sources */,
 				B40D9CD2ABF68FD4F91541B8 /* SystemSettingsLink.swift in Sources */,
@@ -527,12 +544,15 @@
 		0B5B02332A587D76ADEEC791 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = KeepCleanHelper/KeepCleanHelper.entitlements;
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				OTHER_SWIFT_FLAGS = "-parse-as-library";
 				PRODUCT_BUNDLE_IDENTIFIER = com.adhamhaithameid.keepclean.helper;
 				PRODUCT_NAME = KeepCleanHelper;
@@ -551,7 +571,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.adhamhaithameid.keepclean.uitests;
 				SDKROOT = macosx;
 				TEST_TARGET_NAME = KeepClean;
@@ -569,7 +589,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.adhamhaithameid.keepclean.tests;
 				SDKROOT = macosx;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/KeepClean.app/Contents/MacOS/KeepClean";
@@ -587,7 +607,7 @@
 					"@executable_path/../Frameworks",
 					"@loader_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.adhamhaithameid.keepclean.tests;
 				SDKROOT = macosx;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/KeepClean.app/Contents/MacOS/KeepClean";
@@ -598,14 +618,17 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = KeepClean/KeepClean.entitlements;
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = KeepClean/Info.plist;
 				INFOPLIST_KEY_CFBundleIconFile = KeepClean.icns;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.adhamhaithameid.keepclean;
 				PRODUCT_NAME = KeepClean;
 				SDKROOT = macosx;
@@ -616,14 +639,17 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = KeepClean/KeepClean.entitlements;
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
 				INFOPLIST_FILE = KeepClean/Info.plist;
 				INFOPLIST_KEY_CFBundleIconFile = KeepClean.icns;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.adhamhaithameid.keepclean;
 				PRODUCT_NAME = KeepClean;
 				SDKROOT = macosx;
@@ -677,7 +703,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				GENERATE_INFOPLIST_FILE = NO;
-				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				MARKETING_VERSION = 1.0.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
@@ -692,12 +718,15 @@
 		7C495F7071B57DB7E805DBC3 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = KeepCleanHelper/KeepCleanHelper.entitlements;
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				OTHER_SWIFT_FLAGS = "-parse-as-library";
 				PRODUCT_BUNDLE_IDENTIFIER = com.adhamhaithameid.keepclean.helper;
 				PRODUCT_NAME = KeepCleanHelper;
@@ -716,7 +745,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.adhamhaithameid.keepclean.uitests;
 				SDKROOT = macosx;
 				TEST_TARGET_NAME = KeepClean;
@@ -776,7 +805,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				GENERATE_INFOPLIST_FILE = NO;
-				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
 				MARKETING_VERSION = 1.0.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
