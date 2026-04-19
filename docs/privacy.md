@@ -1,31 +1,33 @@
-# Privacy and Footprint
+# Privacy
 
 KeepClean is designed to stay small, local, and easy to trust.
 
-## Privacy
+## What KeepClean Does NOT Do
 
-- No account is required.
-- No analytics are included.
-- No sync or cloud storage is used.
-- No background networking is built into the app.
-- The only web actions are the About tab links that you choose to open yourself.
+- ❌ No user accounts
+- ❌ No analytics or telemetry
+- ❌ No cloud sync or storage
+- ❌ No background networking
+- ❌ No data collection of any kind
+- ❌ No auto-update framework
 
-## Footprint
+## What KeepClean Does
 
-KeepClean is a very small native macOS app.
+- ✅ Runs entirely on your Mac
+- ✅ Uses Apple's native frameworks (Swift, SwiftUI, ApplicationServices)
+- ✅ Stores only your chosen settings (timer duration, auto-start preference) in local UserDefaults
+- ✅ The About tab has links to GitHub and support pages — these only open if you click them
 
-The release checks currently verify:
+## Why It Needs Permissions
 
-- bundle size
-- launch time
-- memory use after launch
-- idle network sockets
+KeepClean requests **Accessibility** and **Input Monitoring** permissions so it can intercept and block built-in keyboard events during cleaning. These permissions are:
 
-That means the packaged app is measured before release artifacts are treated as ready.
+- Granted through macOS System Settings
+- Revocable at any time
+- Only used while the app is open and actively blocking input
 
-## Why the App Stays Small
+The app never reads what you type. It only suppresses keyboard/trackpad events — it doesn't log, store, or transmit them.
 
-- It only supports the built-in keyboard and built-in trackpad.
-- It does not try to manage external devices in this version.
-- It uses native Swift and SwiftUI.
-- It does not include web runtimes, background services, or update frameworks.
+## Open Source
+
+KeepClean's source code is publicly available on [GitHub](https://github.com/adhamhaithameid/keep-clean) under the [PolyForm Noncommercial 1.0.0](../LICENSE.md) license. You can read every line of code to verify these claims.
