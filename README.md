@@ -106,7 +106,7 @@ xcodebuild -project KeepClean.xcodeproj -scheme KeepClean -configuration Release
 If KeepClean saves you from accidental typing, consider buying me a coffee:
 
 <a href="https://buymeacoffee.com/adhamhaithameid">
-  <img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=☕&slug=adhamhaithameid&button_colour=FFDD00&font_colour=000000&font_family=Inter&outline_colour=000000&coffee_colour=ffffff" alt="Buy Me a Coffee" height="40" />
+  <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me a Coffee" height="48" />
 </a>
 
 ## License
