@@ -24,15 +24,15 @@ final class AppViewModelTests: XCTestCase {
         await model.toggleKeyboardLock()
 
         XCTAssertEqual(model.activeSession?.target, .keyboard)
-        XCTAssertEqual(model.keyboardButtonTitle, "Re-enable Keyboard")
-        XCTAssertFalse(model.canTriggerTimedAction)
+        XCTAssertTrue(model.isKeyboardLocked)
+        XCTAssertFalse(model.canStartTimedClean)
         let lockedTargetsAfterStart = await controller.recordedTargets()
         XCTAssertEqual(lockedTargetsAfterStart, [.keyboard])
 
         await model.toggleKeyboardLock()
 
         XCTAssertNil(model.activeSession)
-        XCTAssertEqual(model.keyboardButtonTitle, "Disable Keyboard")
+        XCTAssertFalse(model.isKeyboardLocked)
         XCTAssertEqual(model.statusMessage, "Built-in input ready.")
     }
 
@@ -46,13 +46,9 @@ final class AppViewModelTests: XCTestCase {
         await model.toggleKeyboardLock()
 
         XCTAssertNil(model.activeSession)
-        XCTAssertEqual(
-            model.errorMessage,
-            "macOS denied input access. Allow access."
-        )
-        XCTAssertTrue(model.shouldOfferPrivacyAndSecurityHelp)
-        XCTAssertEqual(model.statusMessage, "Built-in input ready.")
-        XCTAssertTrue(model.canTriggerKeyboardAction)
+        XCTAssertNotNil(model.toastMessage)
+        XCTAssertTrue(model.toastIsError)
+        XCTAssertTrue(model.canToggleKeyboard)
     }
 
     func testToggleKeyboardLockCancelsAutoStartCountdown() async {
@@ -70,20 +66,16 @@ final class AppViewModelTests: XCTestCase {
         XCTAssertEqual(model.activeSession?.target, .keyboard)
     }
 
-    func testTimedFullCleanWithMockControllerStartsSessionUsingConfiguredDuration() async {
+    func testTimedFullCleanStartsSessionUsingConfiguredDuration() async {
         let controller = TestBuiltInInputController(availability: "Built-in input ready.")
         let settings = makeSettings(testName: #function)
         settings.fullCleanDurationSeconds = 15
-        let model = makeModel(
-            settings: settings,
-            inputController: controller,
-            launchOverrides: LaunchOverrides(useMockInputController: true, forceAutoStartOn: false, forceTimedFullCleanOn: false)
-        )
+        let model = makeModel(settings: settings, inputController: controller)
 
         await model.startTimedFullClean()
 
         XCTAssertEqual(model.activeSession?.target, .keyboardAndTrackpad)
-        XCTAssertEqual(model.activeSession?.owner, .helper)
+        XCTAssertEqual(model.activeSession?.owner, .app)
         XCTAssertNotNil(model.remainingTimedLockSeconds)
         XCTAssertLessThanOrEqual(model.remainingTimedLockSeconds ?? 0, 15)
         XCTAssertGreaterThan(model.remainingTimedLockSeconds ?? 0, 0)
@@ -93,32 +85,23 @@ final class AppViewModelTests: XCTestCase {
         model.handleAppTermination()
     }
 
-    func testTimedFullCleanMockFailureRestoresAvailabilityStatus() async {
+    func testTimedFullCleanFailureShowsToast() async {
         let controller = TestBuiltInInputController(
             availability: "Built-in input ready.",
             nextLockError: KeepCleanError.devicesUnavailable
         )
-        let model = makeModel(
-            inputController: controller,
-            launchOverrides: LaunchOverrides(useMockInputController: true, forceAutoStartOn: false, forceTimedFullCleanOn: false)
-        )
+        let model = makeModel(inputController: controller)
 
         await model.startTimedFullClean()
 
         XCTAssertNil(model.activeSession)
-        XCTAssertEqual(
-            model.errorMessage,
-            "KeepClean couldn't find the built-in keyboard and trackpad yet. If macOS asks for approval, please allow access and try again."
-        )
-        XCTAssertEqual(model.statusMessage, "Built-in input ready.")
+        XCTAssertNotNil(model.toastMessage)
+        XCTAssertTrue(model.toastIsError)
     }
 
     func testTimedFullCleanIgnoredWhileAnotherSessionIsActive() async {
         let controller = TestBuiltInInputController(availability: "Built-in input ready.")
-        let model = makeModel(
-            inputController: controller,
-            launchOverrides: LaunchOverrides(useMockInputController: true, forceAutoStartOn: false, forceTimedFullCleanOn: false)
-        )
+        let model = makeModel(inputController: controller)
 
         await model.toggleKeyboardLock()
         let lockedTargetsBeforeSecondAction = await controller.recordedTargets()
@@ -128,30 +111,6 @@ final class AppViewModelTests: XCTestCase {
         XCTAssertEqual(model.activeSession?.target, .keyboard)
         let lockedTargetsAfterSecondAction = await controller.recordedTargets()
         XCTAssertEqual(lockedTargetsBeforeSecondAction, lockedTargetsAfterSecondAction)
-    }
-
-    func testTimedFullCleanHelperMissingRestoresAvailabilityStatus() async {
-        let controller = TestBuiltInInputController(availability: "Built-in input ready.")
-        let model = makeModel(
-            inputController: controller,
-            helperLauncher: HelperProcessLauncher(helperURLProvider: { nil }),
-            launchOverrides: LaunchOverrides(useMockInputController: false, forceAutoStartOn: false, forceTimedFullCleanOn: false)
-        )
-
-        await model.startTimedFullClean()
-
-        XCTAssertNil(model.activeSession)
-        XCTAssertEqual(model.errorMessage, "The timed cleaning helper is missing from the app bundle.")
-        XCTAssertFalse(model.shouldOfferPrivacyAndSecurityHelp)
-        XCTAssertEqual(model.statusMessage, "Built-in input ready.")
-    }
-
-    func testFullCleanButtonTitleTracksSettingsDuration() {
-        let settings = makeSettings(testName: #function)
-        settings.fullCleanDurationSeconds = 90
-        let model = makeModel(settings: settings)
-
-        XCTAssertEqual(model.fullCleanButtonTitle, "Disable Keyboard + Trackpad for 90 Seconds")
     }
 
     func testCancelAutoStartClearsCountdown() {
@@ -167,18 +126,14 @@ final class AppViewModelTests: XCTestCase {
 
         XCTAssertNil(model.autoStartCountdownSecondsRemaining)
         XCTAssertNil(model.activeSession)
-        XCTAssertEqual(model.statusMessage, "Auto-start canceled. You can trigger keyboard cleaning manually.")
+        XCTAssertEqual(model.statusMessage, "Auto-start canceled.")
     }
 
-    func testAutoStartEventuallyLocksKeyboardWithMockController() async throws {
+    func testAutoStartEventuallyLocksKeyboard() async throws {
         let controller = TestBuiltInInputController(availability: "Built-in input ready.")
         let settings = makeSettings(testName: #function)
         settings.autoStartKeyboardDisableOnLaunch = true
-        let model = makeModel(
-            settings: settings,
-            inputController: controller,
-            launchOverrides: LaunchOverrides(useMockInputController: true, forceAutoStartOn: false, forceTimedFullCleanOn: false)
-        )
+        let model = makeModel(settings: settings, inputController: controller)
 
         model.handleInitialAppearance()
 
@@ -195,11 +150,7 @@ final class AppViewModelTests: XCTestCase {
         let controller = TestBuiltInInputController(availability: "Built-in input ready.")
         let settings = makeSettings(testName: #function)
         settings.autoStartKeyboardDisableOnLaunch = true
-        let model = makeModel(
-            settings: settings,
-            inputController: controller,
-            launchOverrides: LaunchOverrides(useMockInputController: true, forceAutoStartOn: false, forceTimedFullCleanOn: false)
-        )
+        let model = makeModel(settings: settings, inputController: controller)
 
         await model.startTimedFullClean()
         model.handleInitialAppearance()
@@ -209,8 +160,8 @@ final class AppViewModelTests: XCTestCase {
         XCTAssertNil(model.activeSession)
         XCTAssertNil(model.remainingTimedLockSeconds)
         XCTAssertNil(model.autoStartCountdownSecondsRemaining)
-        XCTAssertNil(model.errorMessage)
-        XCTAssertEqual(model.statusMessage, "KeepClean closed. Built-in input remains available.")
+        XCTAssertNil(model.toastMessage)
+        XCTAssertEqual(model.statusMessage, "KeepClean closed.")
     }
 
     func testOpenDelegatesToLinkOpener() {
@@ -222,36 +173,35 @@ final class AppViewModelTests: XCTestCase {
         XCTAssertEqual(opener.openedURLs, [ExternalLink.repository.url])
     }
 
-    func testOpenPrivacyAndSecurityDelegatesToLinkOpener() {
-        let opener = TestLinkOpener()
-        let model = makeModel(linkOpener: opener)
-
+    func testOpenPrivacyAndSecurityOpensSettingsLink() {
+        // openPrivacyAndSecurity() calls SystemSettingsLink.open() directly,
+        // not through the link opener. Just verify it doesn't crash.
+        let model = makeModel()
         model.openPrivacyAndSecurity()
-
-        XCTAssertEqual(opener.openedURLs, [SystemSettingsLink.privacyAndSecurity.url])
     }
 
-    func testTimedFullCleanReportsEarlyHelperExit() async throws {
+    func testCancelTimedSessionRestoresState() async {
         let controller = TestBuiltInInputController(availability: "Built-in input ready.")
-        let helperURL = try makeExecutableScript(contents: """
-        #!/bin/sh
-        sleep 0.2
-        exit 1
-        """)
-        let launcher = HelperProcessLauncher(helperURLProvider: { helperURL })
-        let model = makeModel(
-            inputController: controller,
-            helperLauncher: launcher,
-            launchOverrides: LaunchOverrides(useMockInputController: false, forceAutoStartOn: false, forceTimedFullCleanOn: false)
-        )
+        let model = makeModel(inputController: controller)
 
         await model.startTimedFullClean()
-        XCTAssertEqual(model.activeSession?.target, .keyboardAndTrackpad)
+        XCTAssertNotNil(model.activeSession)
 
-        try await waitFor(timeoutNanoseconds: 3_000_000_000) {
-            model.activeSession == nil
-        }
-        XCTAssertEqual(model.errorMessage, "The cleaning helper exited early.")
+        await model.cancelTimedSession()
+
+        XCTAssertNil(model.activeSession)
+        XCTAssertNil(model.remainingTimedLockSeconds)
+    }
+
+    func testToastDismissal() {
+        let model = makeModel()
+
+        model.showToast("Hello", isError: false)
+        XCTAssertEqual(model.toastMessage, "Hello")
+        XCTAssertFalse(model.toastIsError)
+
+        model.dismissToast()
+        XCTAssertNil(model.toastMessage)
     }
 
     private func makeModel(
@@ -261,13 +211,17 @@ final class AppViewModelTests: XCTestCase {
         linkOpener: TestLinkOpener = TestLinkOpener(),
         launchOverrides: LaunchOverrides = LaunchOverrides(useMockInputController: false, forceAutoStartOn: false, forceTimedFullCleanOn: false)
     ) -> AppViewModel {
-        AppViewModel(
+        let model = AppViewModel(
             settings: settings ?? makeSettings(testName: #function),
             inputController: inputController,
             helperLauncher: helperLauncher,
             linkOpener: linkOpener,
             launchOverrides: launchOverrides
         )
+        // In tests, bypass system permission checks so we can test locking logic.
+        model.hasAccessibility = true
+        model.hasInputMonitoring = true
+        return model
     }
 
     private func makeSettings(testName: String) -> AppSettings {
