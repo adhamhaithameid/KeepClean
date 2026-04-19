@@ -2,98 +2,103 @@ import AppKit
 import SwiftUI
 
 struct AboutTabView: View {
-    @Bindable var model: AppViewModel
+    @ObservedObject var model: AppViewModel
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 18) {
-                Button {
-                    model.open(.profile)
-                } label: {
-                    ProfileAvatarView()
-                }
-                .buttonStyle(.plain)
-                .accessibilityIdentifier("about.profile")
-                .accessibilityLabel("GitHub Profile")
+        VStack(spacing: 0) {
+            Spacer()
 
+            VStack(spacing: 20) {
+                // App icon
+                KeepCleanBrandMark(size: 80)
+
+                // App name and version
                 VStack(spacing: 4) {
-                    Text("Made with love, coffee, VS Code, and Figma.")
-                        .font(.headline)
+                    Text("KeepClean")
+                        .font(.system(size: 22, weight: .bold))
                         .foregroundStyle(KeepCleanPalette.ink)
-                        .multilineTextAlignment(.center)
 
-                    Text("Built for practicing Swift as a junior software engineer.")
-                        .font(.subheadline)
+                    Text("Version 1.0.0")
+                        .font(.system(size: 13))
                         .foregroundStyle(KeepCleanPalette.mutedInk)
-                        .multilineTextAlignment(.center)
                 }
 
-                HStack(spacing: 14) {
-                    iconButton(
-                        systemName: "chevron.left.forwardslash.chevron.right",
-                        label: "GitHub",
+                // Description
+                Text("Temporarily disable your MacBook's built-in keyboard and trackpad for cleaning.")
+                    .font(.system(size: 13))
+                    .foregroundStyle(KeepCleanPalette.mutedInk)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: 360)
+
+                // Links
+                HStack(spacing: 12) {
+                    linkButton(
+                        title: "GitHub",
+                        icon: "chevron.left.forwardslash.chevron.right",
                         identifier: "about.repo"
                     ) {
                         model.open(.repository)
                     }
 
-                    iconButton(
-                        systemName: "cup.and.saucer.fill",
-                        label: "Buy Me a Coffee",
+                    linkButton(
+                        title: "Donate",
+                        icon: "cup.and.saucer.fill",
                         identifier: "about.donate"
                     ) {
                         model.open(.donation)
                     }
                 }
             }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 16)
+
+            Spacer()
+
+            // Footer
+            VStack(spacing: 4) {
+                Button {
+                    model.open(.profile)
+                } label: {
+                    Text("Made by Adham Haitham")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(KeepCleanPalette.blue)
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("about.profile")
+
+                Text("Built with Swift & SwiftUI")
+                    .font(.system(size: 11))
+                    .foregroundStyle(KeepCleanPalette.mutedInk.opacity(0.6))
+            }
+            .padding(.bottom, 8)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    private func iconButton(
-        systemName: String,
-        label: String,
+    private func linkButton(
+        title: String,
+        icon: String,
         identifier: String,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
-            Image(systemName: systemName)
-                .font(.system(size: 18, weight: .semibold))
-                .frame(width: 42, height: 42)
-        }
-        .buttonStyle(.bordered)
-        .controlSize(.large)
-        .accessibilityIdentifier(identifier)
-        .accessibilityLabel(label)
-    }
-}
-
-private struct ProfileAvatarView: View {
-    var body: some View {
-        Group {
-            if let image = NSImage(named: "Profile") {
-                Image(nsImage: image)
-                    .resizable()
-                    .scaledToFill()
-            } else if let url = Bundle.main.url(forResource: "profile", withExtension: "png"),
-                      let data = try? Data(contentsOf: url),
-                      let image = NSImage(data: data) {
-                Image(nsImage: image)
-                    .resizable()
-                    .scaledToFill()
-            } else {
-                Circle()
-                    .fill(KeepCleanPalette.blueSoft)
+            HStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(.system(size: 12, weight: .medium))
+                Text(title)
+                    .font(.system(size: 13, weight: .medium))
+            }
+            .foregroundStyle(KeepCleanPalette.ink)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .background {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(KeepCleanPalette.surface)
                     .overlay {
-                        Text("AE")
-                            .font(.title.bold())
-                            .foregroundStyle(KeepCleanPalette.ink)
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .strokeBorder(KeepCleanPalette.border, lineWidth: 1)
                     }
             }
         }
-        .frame(width: 112, height: 112)
-        .clipShape(Circle())
-        .overlay(Circle().strokeBorder(KeepCleanPalette.border, lineWidth: 1))
+        .buttonStyle(.plain)
+        .accessibilityIdentifier(identifier)
     }
 }

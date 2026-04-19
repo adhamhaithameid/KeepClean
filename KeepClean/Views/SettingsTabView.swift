@@ -1,60 +1,80 @@
 import SwiftUI
 
 struct SettingsTabView: View {
-    @Bindable var settings: AppSettings
+    @ObservedObject var settings: AppSettings
     let openPrivacyAndSecurity: () -> Void
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                KeepCleanPanel {
-                    HStack(alignment: .firstTextBaseline) {
-                        Text("Keyboard + Trackpad Duration")
-                            .font(.headline)
+        VStack(alignment: .leading, spacing: 16) {
+            // Duration setting
+            KeepCleanPanel {
+                HStack(alignment: .firstTextBaseline) {
+                    Text("Full Clean Duration")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(KeepCleanPalette.ink)
+
+                    Spacer()
+
+                    Text("\(settings.fullCleanDurationSeconds)s")
+                        .font(.system(size: 15, weight: .medium, design: .monospaced))
+                        .foregroundStyle(KeepCleanPalette.ink)
+                        .accessibilityIdentifier("settings.durationValue")
+                }
+
+                Stepper(
+                    "How long keyboard + trackpad stay disabled",
+                    value: $settings.fullCleanDurationSeconds,
+                    in: AppSettings.minimumDurationSeconds...AppSettings.maximumDurationSeconds
+                )
+                .font(.caption)
+                .foregroundStyle(KeepCleanPalette.mutedInk)
+                .accessibilityIdentifier("settings.durationStepper")
+            }
+
+            // Auto-start toggle
+            KeepCleanPanel {
+                Toggle(isOn: $settings.autoStartKeyboardDisableOnLaunch) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Auto-start on launch")
+                            .font(.system(size: 15, weight: .semibold))
                             .foregroundStyle(KeepCleanPalette.ink)
 
-                        Spacer()
+                        Text("Disables the keyboard 3 seconds after opening the app")
+                            .font(.caption)
+                            .foregroundStyle(KeepCleanPalette.mutedInk)
+                    }
+                }
+                .accessibilityIdentifier("settings.autoStartToggle")
+            }
 
-                        Text("\(settings.fullCleanDurationSeconds) seconds")
-                            .font(.body.monospacedDigit())
+            // Permissions shortcut
+            KeepCleanPanel {
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Permissions")
+                            .font(.system(size: 15, weight: .semibold))
                             .foregroundStyle(KeepCleanPalette.ink)
-                            .accessibilityIdentifier("settings.durationValue")
+
+                        Text("Open macOS Privacy & Security settings")
+                            .font(.caption)
+                            .foregroundStyle(KeepCleanPalette.mutedInk)
                     }
 
-                    Stepper(
-                        "Choose how long full clean stays active.",
-                        value: $settings.fullCleanDurationSeconds,
-                        in: AppSettings.minimumDurationSeconds...AppSettings.maximumDurationSeconds
-                    )
-                    .accessibilityIdentifier("settings.durationStepper")
-                }
+                    Spacer()
 
-                KeepCleanPanel {
-                    Toggle("Start keyboard disable after opening the app", isOn: $settings.autoStartKeyboardDisableOnLaunch)
-                        .font(.headline)
-                        .foregroundStyle(KeepCleanPalette.ink)
-                        .accessibilityIdentifier("settings.autoStartToggle")
-
-                    Text("KeepClean shows a 3-second countdown first, so you can cancel with the trackpad before the keyboard turns off.")
-                        .font(.subheadline)
-                        .foregroundStyle(KeepCleanPalette.mutedInk)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-
-                KeepCleanPanel {
-                    Button("Open Privacy & Security") {
+                    Button {
                         openPrivacyAndSecurity()
+                    } label: {
+                        Label("Open", systemImage: "arrow.up.forward.square")
+                            .font(.system(size: 13, weight: .medium))
                     }
                     .buttonStyle(.bordered)
+                    .controlSize(.small)
                     .accessibilityIdentifier("settings.openPrivacyAndSecurity")
-
-                    Text("Use this if macOS asks you to approve KeepClean before cleaning can start.")
-                        .font(.subheadline)
-                        .foregroundStyle(KeepCleanPalette.mutedInk)
-                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
-            .padding(.vertical, 4)
+
+            Spacer()
         }
     }
 }
