@@ -67,7 +67,7 @@ verify_release_app_footprint() {
   [[ -x "$release_app/Contents/Helpers/KeepCleanHelper" ]]
   [[ -f "$release_app/Contents/Resources/profile.png" ]]
   [[ -f "$release_app/Contents/Resources/KeepClean.icns" ]]
-  [[ ! -f "$release_app/Contents/Resources/brand-mark.png" ]]
+  [[ -f "$release_app/Contents/Resources/brand-mark.png" ]]
   icon_file="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIconFile' "$release_app/Contents/Info.plist")"
   [[ "$icon_file" == "KeepClean.icns" ]]
   /usr/bin/codesign --verify --deep --strict "$release_app"
