@@ -1,87 +1,114 @@
-# KeepClean
+<p align="center">
+  <img src="KeepClean/Resources/brand-mark.png" width="128" alt="KeepClean app icon" />
+</p>
 
-KeepClean is a simple macOS utility that lets you temporarily disable your built-in keyboard, or your built-in keyboard and trackpad together, so you can clean your Mac without accidental typing or clicking.
+<h1 align="center">KeepClean</h1>
 
-It is intentionally small and focused:
+<p align="center">
+  <strong>Temporarily disable your MacBook's keyboard and trackpad so you can clean it without accidental input.</strong>
+</p>
 
-- no accounts
-- no analytics
-- no sync
-- no background networking
-- no external keyboard or mouse support in this version
+<p align="center">
+  <a href="https://github.com/adhamhaithameid/keep-clean/releases">Download</a> · <a href="docs/install-from-github.md">Install Guide</a> · <a href="docs/faq.md">FAQ</a>
+</p>
+
+---
+
+## Why KeepClean?
+
+Every time you wipe down your MacBook, stray keypresses open apps, move windows, and type gibberish. KeepClean solves this in one click — disable the built-in keyboard (and optionally the trackpad), clean your Mac, then re-enable everything instantly.
+
+- **No accounts, no analytics, no internet required.** Runs entirely offline.
+- **Lightweight and native.** Built with Swift and SwiftUI.
+- **Safe by design.** Keyboard-only mode keeps the trackpad active, and timed mode always auto-recovers.
 
 ## Quick Start
 
-1. Open the latest [GitHub release](https://github.com/adhamhaithameid/keep-clean/releases).
-2. Download either the `.dmg` or the `.zip`.
-3. If you use the `.dmg`, it opens a drag-to-Applications installer window. If you use the `.zip`, move `KeepClean.app` into `Applications` yourself.
-4. Open it with a right click the first time if macOS warns that it came from the internet.
-5. Start with `Disable Keyboard` for your first real test.
+1. Download the latest [release](https://github.com/adhamhaithameid/keep-clean/releases) (`.dmg` or `.zip`).
+2. Move `KeepClean.app` to your Applications folder.
+3. Open it — the one-time setup screen guides you through granting two permissions:
+   - **Accessibility** — lets the app intercept keyboard events.
+   - **Input Monitoring** — lets the app actually block them.
+4. Click **Disable Keyboard** and start cleaning.
 
-If you want the full install guide, see [Install From GitHub](/Users/adhamhaithameid/Desktop/code/keep-clean/docs/install-from-github.md).
+> [!TIP]
+> If macOS warns about an unsigned app: right-click `KeepClean.app` → **Open** → click **Open** in the dialog.
 
-## What the App Does
+## Features
 
-- `Disable Keyboard`
-  - turns off only the built-in keyboard
-  - keeps the built-in trackpad active
-  - lets you re-enable the keyboard from the same button
-- `Disable Keyboard + Trackpad`
-  - turns off both for the timer you choose in Settings
-  - restores both automatically when the timer ends
-- `Settings`
-  - choose a full-clean duration from `15` to `180` seconds
-  - optionally start keyboard-only cleaning automatically after opening the app
-- `About`
-  - your GitHub profile link
-  - your repository link
-  - your Buy Me a Coffee link
+### 🧹 Disable Keyboard
 
-## Before You Rely On It
+Turns off only the built-in keyboard. The trackpad stays fully active, so you can click **Re-enable Keyboard** at any time. This is the safest mode and the recommended starting point.
 
-Run the short [Post-Install Checklist](/Users/adhamhaithameid/Desktop/code/keep-clean/docs/manual-testing.md). It helps you confirm the permission flow, timer, auto-start, and recovery behavior on your own Mac first.
+### 🧼 Disable Keyboard + Trackpad
 
-## Safety
+Turns off both for a configurable timer (15–180 seconds). Everything is restored automatically when the countdown finishes. Perfect for a thorough screen and keyboard wipe.
 
-- Keyboard-only mode is the safest option because the trackpad stays active.
-- Timed full-clean always has a deadline and tries to recover automatically.
-- The timed clean is handled by a helper so it can finish even if the main window closes.
-- Closing the window fully quits the app.
+### ⚙️ Settings
 
-More detail is in [Safety Notes](/Users/adhamhaithameid/Desktop/code/keep-clean/docs/safety.md).
+- Choose your preferred timer duration.
+- Toggle **auto-start** to begin keyboard-only cleaning the moment you open the app.
+
+### ℹ️ About
+
+Quick links to the GitHub repository and your support options.
 
 ## Permissions
 
-macOS may ask for permission the first time you try a real cleaning action.
+KeepClean needs two macOS permissions to work. Both are requested through a guided setup screen that appears the first time you open the app:
 
-- If macOS prompts, allow access.
-- If access is denied, KeepClean stays usable and shows a plain-language error instead of leaving your Mac half-disabled.
-- KeepClean also includes an `Open Privacy & Security` button in the app when you need to approve it.
-- `Disable Keyboard` is the safest first test because the trackpad remains active.
+| Permission | Why | What happens without it |
+|---|---|---|
+| **Accessibility** | Create event taps to intercept keyboard events | The app can't disable the keyboard at all |
+| **Input Monitoring** | Actually block events from reaching other apps | Events are intercepted but not blocked — keys still type |
 
-See [Permissions](/Users/adhamhaithameid/Desktop/code/keep-clean/docs/permissions.md).
+If either permission is revoked later, the app automatically returns to the setup screen. You can also re-grant permissions from the banners shown in the main interface.
+
+→ [Full permissions guide](docs/permissions.md)
+
+## Safety
+
+KeepClean is deliberately conservative:
+
+- **Keyboard-only mode** keeps the trackpad active — you always have a way to interact.
+- **Timed mode** always has a deadline and auto-recovers.
+- **Closing the window quits the app** — it never lingers in the background.
+- **Only built-in devices** are affected — external keyboards and mice are never touched.
+
+→ [Safety notes](docs/safety.md)
 
 ## Documentation
 
-- [Install From GitHub](/Users/adhamhaithameid/Desktop/code/keep-clean/docs/install-from-github.md)
-- [Post-Install Checklist](/Users/adhamhaithameid/Desktop/code/keep-clean/docs/manual-testing.md)
-- [Permissions](/Users/adhamhaithameid/Desktop/code/keep-clean/docs/permissions.md)
-- [Safety Notes](/Users/adhamhaithameid/Desktop/code/keep-clean/docs/safety.md)
-- [Privacy and Footprint](/Users/adhamhaithameid/Desktop/code/keep-clean/docs/privacy.md)
-- [FAQ](/Users/adhamhaithameid/Desktop/code/keep-clean/docs/faq.md)
-- [Troubleshooting](/Users/adhamhaithameid/Desktop/code/keep-clean/docs/troubleshooting.md)
-- [Uninstall KeepClean](/Users/adhamhaithameid/Desktop/code/keep-clean/docs/uninstall.md)
-- [How KeepClean Works](/Users/adhamhaithameid/Desktop/code/keep-clean/docs/architecture.md)
+| Guide | What it covers |
+|---|---|
+| [Install Guide](docs/install-from-github.md) | Download, install, and first launch |
+| [Permissions](docs/permissions.md) | What the app needs and why |
+| [Post-Install Checklist](docs/manual-testing.md) | 5-minute walkthrough to verify everything works |
+| [Safety Notes](docs/safety.md) | How the app keeps you safe |
+| [FAQ](docs/faq.md) | Common questions answered |
+| [Troubleshooting](docs/troubleshooting.md) | What to do when something goes wrong |
+| [Privacy](docs/privacy.md) | What data the app does (and doesn't) collect |
+| [Uninstall](docs/uninstall.md) | How to fully remove KeepClean |
 
-## Installable Builds
+## Build From Source
 
-The current packaged outputs live here when you build locally:
+```bash
+git clone https://github.com/adhamhaithameid/keep-clean.git
+cd keep-clean
+xcodegen generate
+xcodebuild -project KeepClean.xcodeproj -scheme KeepClean -configuration Release build
+```
 
-- [KeepClean.app](/Users/adhamhaithameid/Desktop/code/keep-clean/release/KeepClean.app)
-- [KeepClean-1.0.0-macOS.zip](/Users/adhamhaithameid/Desktop/code/keep-clean/release/KeepClean-1.0.0-macOS.zip)
-- [KeepClean-1.0.0-macOS.dmg](/Users/adhamhaithameid/Desktop/code/keep-clean/release/KeepClean-1.0.0-macOS.dmg)
-- [SHA256SUMS.txt](/Users/adhamhaithameid/Desktop/code/keep-clean/release/SHA256SUMS.txt)
+**Requirements:** macOS 13.0 (Ventura) or later · Xcode 15+ · [XcodeGen](https://github.com/yonaskolb/XcodeGen)
+
+## Support
+
+If KeepClean saves you from accidental typing, consider buying me a coffee:
+
+<a href="https://buymeacoffee.com/adhamhaithameid">
+  <img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=☕&slug=adhamhaithameid&button_colour=FFDD00&font_colour=000000&font_family=Inter&outline_colour=000000&coffee_colour=ffffff" alt="Buy Me a Coffee" height="40" />
+</a>
 
 ## License
 
-This project is source-available under [PolyForm Noncommercial 1.0.0](/Users/adhamhaithameid/Desktop/code/keep-clean/LICENSE.md).
+Source-available under the [PolyForm Noncommercial 1.0.0](LICENSE.md) license.
