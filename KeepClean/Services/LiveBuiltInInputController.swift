@@ -11,11 +11,15 @@ actor LiveBuiltInInputController: BuiltInInputControlling {
     func availabilitySummary() async -> String {
         let inventory = BuiltInInputInventory.current()
 
-        switch (inventory.hasKeyboard, inventory.hasTrackpad, KeyboardBlockerResource.isTrusted(prompt: false)) {
+        switch (
+            inventory.hasKeyboard, inventory.hasTrackpad,
+            KeyboardBlockerResource.isTrusted(prompt: false)
+        ) {
         case (true, true, true):
             return "Built-in keyboard and trackpad are ready."
         case (true, true, false):
-            return "Allow KeepClean in Privacy & Security \u{2192} Accessibility, then reopen it to start cleaning."
+            return
+                "Allow KeepClean in Privacy & Security \u{2192} Accessibility, then reopen it to start cleaning."
         case (true, false, _):
             return "Keyboard found. Waiting for the built-in trackpad."
         case (false, true, _):
@@ -45,7 +49,8 @@ actor LiveBuiltInInputController: BuiltInInputControlling {
             let hasInputMonitoring = CGPreflightListenEventAccess()
             logger.info("Input Monitoring (CGPreflightListenEventAccess): \(hasInputMonitoring)")
             if !hasInputMonitoring {
-                logger.warning("Input Monitoring NOT granted — event tap will be impotent. Requesting access…")
+                logger.warning(
+                    "Input Monitoring NOT granted — event tap will be impotent. Requesting access…")
                 CGRequestListenEventAccess()
                 throw KeepCleanError.permissionDenied(
                     "Allow KeepClean in Privacy & Security \u{2192} Input Monitoring. Enable it, then try again."
@@ -55,6 +60,55 @@ actor LiveBuiltInInputController: BuiltInInputControlling {
             if target.includesKeyboard {
                 logger.info("Creating keyboard blocker…")
                 resources.append(try KeyboardBlockerResource.make())
+                logger.info("Keyboard blocker created successfully.")
+            }
+
+            if target.includesTrackpad {
+                logger.info("Creating trackpad blocker…")
+                resources.append(try TrackpadBlockerResource.make())
+                logger.info("Trackpad blocker created successfully.")
+            }
+
+            return InputLockLease(target: target, retainedObjects: resources)
+        } catch {
+            resources.forEach { object in
+                (object as? InputLockResource)?.releaseLock()
+            }
+            throw error
+        }
+    }
+
+    // MARK: - Lock with emergency-stop support
+
+    func lock(
+        target: BuiltInInputTarget,
+        onEmergencyStop: @escaping @Sendable () -> Void
+    ) async throws -> InputLockLease {
+        var resources: [AnyObject] = []
+
+        do {
+            guard KeyboardBlockerResource.isTrusted(prompt: true) else {
+                logger.error("Accessibility permission NOT granted — cannot create event taps.")
+                throw KeepCleanError.permissionDenied(
+                    "Allow KeepClean in Privacy & Security \u{2192} Accessibility. Enable it, then reopen the app and try again."
+                )
+            }
+            logger.info("Accessibility permission confirmed.")
+
+            let hasInputMonitoring = CGPreflightListenEventAccess()
+            logger.info("Input Monitoring (CGPreflightListenEventAccess): \(hasInputMonitoring)")
+            if !hasInputMonitoring {
+                logger.warning(
+                    "Input Monitoring NOT granted — event tap will be impotent. Requesting access…")
+                CGRequestListenEventAccess()
+                throw KeepCleanError.permissionDenied(
+                    "Allow KeepClean in Privacy & Security \u{2192} Input Monitoring. Enable it, then try again."
+                )
+            }
+
+            if target.includesKeyboard {
+                logger.info("Creating keyboard blocker with emergency-stop support…")
+                resources.append(try KeyboardBlockerResource.make(onEmergencyStop: onEmergencyStop))
                 logger.info("Keyboard blocker created successfully.")
             }
 
@@ -108,7 +162,8 @@ private enum HIDDeviceSnapshotter {
         ]
 
         IOHIDManagerSetDeviceMatching(manager, match as CFDictionary)
-        guard IOHIDManagerOpen(manager, IOOptionBits(kIOHIDOptionsTypeNone)) == kIOReturnSuccess else {
+        guard IOHIDManagerOpen(manager, IOOptionBits(kIOHIDOptionsTypeNone)) == kIOReturnSuccess
+        else {
             return []
         }
         defer {
@@ -147,16 +202,20 @@ private enum HIDDeviceSnapshotter {
     /// Determines if a device is built-in.
     static func isBuiltIn(_ device: IOHIDDevice) -> Bool {
         if let builtIn = IOHIDDeviceGetProperty(device, kIOHIDBuiltInKey as CFString) as? NSNumber,
-           builtIn.boolValue {
+            builtIn.boolValue
+        {
             return true
         }
 
-        let transport = IOHIDDeviceGetProperty(device, kIOHIDTransportKey as CFString) as? String ?? ""
+        let transport =
+            IOHIDDeviceGetProperty(device, kIOHIDTransportKey as CFString) as? String ?? ""
         if ["SPI", "I2C", "spi", "i2c"].contains(transport) {
             return true
         }
 
-        let vendorID = (IOHIDDeviceGetProperty(device, kIOHIDVendorIDKey as CFString) as? NSNumber)?.intValue ?? 0
+        let vendorID =
+            (IOHIDDeviceGetProperty(device, kIOHIDVendorIDKey as CFString) as? NSNumber)?.intValue
+            ?? 0
         let product = IOHIDDeviceGetProperty(device, kIOHIDProductKey as CFString) as? String ?? ""
         if vendorID == 0x05AC && product.localizedCaseInsensitiveContains("Internal") {
             return true
@@ -265,14 +324,16 @@ private final class TrackpadBlockerResource: NSObject, InputLockResource {
 
         let callback = trackpadBlockerCallback as CGEventTapCallBack
 
-        guard let tap = CGEvent.tapCreate(
-            tap: .cgSessionEventTap,
-            place: .headInsertEventTap,
-            options: .defaultTap,
-            eventsOfInterest: mask,
-            callback: callback,
-            userInfo: Unmanaged.passUnretained(self).toOpaque()
-        ) else {
+        guard
+            let tap = CGEvent.tapCreate(
+                tap: .cgSessionEventTap,
+                place: .headInsertEventTap,
+                options: .defaultTap,
+                eventsOfInterest: mask,
+                callback: callback,
+                userInfo: Unmanaged.passUnretained(self).toOpaque()
+            )
+        else {
             setupError = KeepCleanError.permissionDenied(
                 "Allow KeepClean in Accessibility to block the trackpad."
             )
@@ -317,17 +378,29 @@ private final class KeyboardBlockerResource: NSObject, InputLockResource {
     private let readySemaphore = DispatchSemaphore(value: 0)
     private var setupError: Error?
 
+    /// Called on the main thread when the emergency stop chord is detected.
+    /// Set before calling `start()` so the tap thread sees it from the first event.
+    var onEmergencyStop: (@Sendable () -> Void)?
+
+    /// Tracks which character key codes are currently held down.
+    /// Used exclusively on the tap thread — no synchronisation needed.
+    private var pressedKeyCodes: Set<Int64> = []
+
     static func isTrusted(prompt: Bool) -> Bool {
         if prompt {
-            let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
+            let options =
+                [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
             return AXIsProcessTrustedWithOptions(options)
         }
 
         return AXIsProcessTrusted()
     }
 
-    static func make() throws -> KeyboardBlockerResource {
+    static func make(
+        onEmergencyStop: (@Sendable () -> Void)? = nil
+    ) throws -> KeyboardBlockerResource {
         let resource = KeyboardBlockerResource()
+        resource.onEmergencyStop = onEmergencyStop
         resource.start()
         resource.readySemaphore.wait()
 
@@ -387,10 +460,10 @@ private final class KeyboardBlockerResource: NSObject, InputLockResource {
 
         // Build keyboard event mask with EXPLICIT Int shifts to avoid
         // type conversion issues between UInt32/Int/CGEventMask(UInt64).
-        let keyDownBit    = CGEventMask(1 << Int(CGEventType.keyDown.rawValue))       // bit 10
-        let keyUpBit      = CGEventMask(1 << Int(CGEventType.keyUp.rawValue))         // bit 11
-        let flagsBit      = CGEventMask(1 << Int(CGEventType.flagsChanged.rawValue))  // bit 12
-        let systemDefBit  = CGEventMask(1 << 14)                                      // system-defined
+        let keyDownBit = CGEventMask(1 << Int(CGEventType.keyDown.rawValue))  // bit 10
+        let keyUpBit = CGEventMask(1 << Int(CGEventType.keyUp.rawValue))  // bit 11
+        let flagsBit = CGEventMask(1 << Int(CGEventType.flagsChanged.rawValue))  // bit 12
+        let systemDefBit = CGEventMask(1 << 14)  // system-defined
 
         let mask: CGEventMask = keyDownBit | keyUpBit | flagsBit | systemDefBit
         logger.info("Keyboard tap: event mask = 0x\(String(mask, radix: 16))")
@@ -414,7 +487,8 @@ private final class KeyboardBlockerResource: NSObject, InputLockResource {
         if createdTap != nil {
             tapLevel = "cghidEventTap (HID-level)"
         } else {
-            logger.warning("Keyboard: HID-level tap creation failed, falling back to session-level.")
+            logger.warning(
+                "Keyboard: HID-level tap creation failed, falling back to session-level.")
             // Fallback to session-level tap
             createdTap = CGEvent.tapCreate(
                 tap: .cgSessionEventTap,
@@ -456,18 +530,37 @@ private final class KeyboardBlockerResource: NSObject, InputLockResource {
     }
 
     fileprivate func handle(_ type: CGEventType, event: CGEvent) -> Unmanaged<CGEvent>? {
+        // Maintain pressed-key set for emergency-stop detection (tap thread only).
+        let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
+        switch type {
+        case .keyDown: pressedKeyCodes.insert(keyCode)
+        case .keyUp: pressedKeyCodes.remove(keyCode)
+        default: break
+        }
+
+        // Emergency stop: if the chord is active, fire the callback on the main
+        // thread and pass the event through so modifier state stays consistent.
+        if let handler = onEmergencyStop {
+            let rawFlags = UInt(event.flags.rawValue)
+            if EmergencyStopShortcut.isActive(
+                modifierFlagsRawValue: rawFlags,
+                pressedKeyCodes: pressedKeyCodes
+            ) {
+                DispatchQueue.main.async { handler() }
+                return Unmanaged.passUnretained(event)
+            }
+        }
+
         switch type {
         case .tapDisabledByTimeout, .tapDisabledByUserInput:
-            // System disabled our tap — re-enable immediately
+            // System disabled our tap — re-enable immediately.
             logger.warning("Keyboard tap auto-disabled (type=\(type.rawValue)). Re-enabling…")
             if let tap {
                 CGEvent.tapEnable(tap: tap, enable: true)
             }
             return Unmanaged.passUnretained(event)
         default:
-            // Block EVERYTHING that comes through the keyboard event tap.
-            // The mask already filters to only keyboard-related events,
-            // so dropping all of them is correct and safe.
+            // Block all other keyboard events.
             return nil
         }
     }
