@@ -17,6 +17,12 @@ git diff --cached
 git commit
 ```
 
+For larger local change sets, generate suggested slices first:
+
+```bash
+./script/suggest_commit_slices.sh
+```
+
 ## Rules of thumb
 
 - One behavior change per commit.
