@@ -7,6 +7,7 @@
 .release-checks
 .brand-build
 .generated-brand-assets
+build/
 dist
 release
 xcuserdata/
