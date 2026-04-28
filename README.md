@@ -89,6 +89,7 @@ KeepClean is deliberately conservative:
 | [Troubleshooting](docs/troubleshooting.md) | What to do when something goes wrong |
 | [Privacy](docs/privacy.md) | What data the app does (and doesn't) collect |
 | [Uninstall](docs/uninstall.md) | How to fully remove KeepClean |
+| [Atomic Commits](docs/atomic-commits.md) | Workflow for tiny, clean, reviewable commits |
 
 ## Build From Source
 
