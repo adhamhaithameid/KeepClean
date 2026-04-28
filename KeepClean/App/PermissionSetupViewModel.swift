@@ -1,22 +1,9 @@
 @preconcurrency import ApplicationServices
 import AppKit
 import Foundation
-import IOKit.hid
 import os.log
 
 private let logger = Logger(subsystem: "com.adhamhaithameid.keepclean", category: "PermissionSetup")
-
-/// Free function usable as a C function pointer for the test event tap.
-/// Simply passes events through — we only need the tap to be created to prove
-/// that Input Monitoring is granted.
-private func testTapCallback(
-    _ proxy: CGEventTapProxy,
-    _ type: CGEventType,
-    _ event: CGEvent,
-    _ userInfo: UnsafeMutableRawPointer?
-) -> Unmanaged<CGEvent>? {
-    Unmanaged.passUnretained(event)
-}
 
 /// Drives the first-launch permission setup screen.
 /// Both Accessibility and Input Monitoring are required for keyboard blocking.
@@ -30,7 +17,7 @@ final class PermissionSetupViewModel: ObservableObject {
 
     /// True when the user has manually confirmed they granted Input Monitoring
     /// but the system detection still can't pick it up (common with ad-hoc signed builds).
-    @Published var userConfirmedInputMonitoring = false
+    @Published private(set) var userConfirmedInputMonitoring = false
 
     /// True once both Accessibility and Input Monitoring are granted (or user-confirmed).
     var canProceed: Bool {
@@ -38,7 +25,8 @@ final class PermissionSetupViewModel: ObservableObject {
     }
 
     /// Whether to show the manual override option.
-    /// Appears after the user has had time to grant the permission but detection fails.
+    /// Appears after `overrideTimerDelay` seconds once the user has triggered
+    /// Input Monitoring setup but detection still hasn't confirmed the grant.
     @Published private(set) var showManualOverride = false
 
     // MARK: - Private
@@ -47,8 +35,13 @@ final class PermissionSetupViewModel: ObservableObject {
     private var overrideTimerTask: Task<Void, Never>?
     private let settings: AppSettings
 
-    init(settings: AppSettings) {
+    /// Configurable delay (in seconds) before the manual override UI appears.
+    /// Kept at 10s in production; injectable for tests.
+    let overrideTimerDelay: Double
+
+    init(settings: AppSettings, overrideTimerDelay: Double = 10) {
         self.settings = settings
+        self.overrideTimerDelay = overrideTimerDelay
         refresh()
     }
 
@@ -93,19 +86,13 @@ final class PermissionSetupViewModel: ObservableObject {
         settings.setupCompleted = true
     }
 
-    func skipSetup() {
-        stopPolling()
-        overrideTimerTask?.cancel()
-        settings.setupCompleted = true
-    }
-
     // MARK: - Polling
 
     func startPolling() {
         guard pollTask == nil else { return }
         pollTask = Task { [weak self] in
             while !Task.isCancelled {
-                try? await Task.sleep(for: .milliseconds(500))
+                try? await Task.sleep(for: .seconds(1))
                 self?.refresh()
             }
         }
@@ -116,17 +103,24 @@ final class PermissionSetupViewModel: ObservableObject {
         pollTask = nil
     }
 
+    /// Internal accessor for tests — indicates whether the poll loop is currently running.
+    var isPolling: Bool { pollTask != nil }
+
     // MARK: - Manual Override Timer
 
-    /// Shows the manual "I've already granted this" option after 10 seconds,
+    /// Shows the manual "I've already granted this" option after `overrideTimerDelay` seconds,
     /// in case the automated detection can't pick up the permission.
     private func startOverrideTimer() {
         overrideTimerTask?.cancel()
         overrideTimerTask = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(10))
+            guard let self else { return }
+            try? await Task.sleep(for: .seconds(overrideTimerDelay))
             guard !Task.isCancelled else { return }
             await MainActor.run {
-                self?.showManualOverride = true
+                // Only show override if detection still hasn't confirmed the grant.
+                if !(self.inputMonitoringGranted || self.userConfirmedInputMonitoring) {
+                    self.showManualOverride = true
+                }
             }
         }
     }
@@ -134,128 +128,30 @@ final class PermissionSetupViewModel: ObservableObject {
     // MARK: - Detection
 
     private func refresh() {
+        let wasAccessibility = accessibilityGranted
+        let wasInputMonitoring = inputMonitoringGranted
+
         accessibilityGranted = AXIsProcessTrusted()
 
-        // Try multiple detection methods — Input Monitoring is notoriously
-        // hard to detect reliably for ad-hoc signed builds.
-        let detected = checkInputMonitoringGranted()
-        if detected && !inputMonitoringGranted {
+        let detected = InputMonitoringDetector.isGranted()
+        if detected && !wasInputMonitoring {
             logger.info("Input Monitoring detected as granted.")
         }
         inputMonitoringGranted = detected
-    }
 
-    private func checkInputMonitoringGranted() -> Bool {
-        // Method 1: Try creating a test listenOnly event tap.
-        // This is the most reliable runtime check because it directly tests
-        // whether the system will allow us to tap events.
-        if checkInputMonitoringViaTestEventTap() {
-            logger.debug("Input Monitoring detected via test event tap.")
-            return true
+        // Auto-clear manual override and user-confirmation if detection now succeeds.
+        if inputMonitoringGranted {
+            showManualOverride = false
         }
 
-        // Method 2: CGPreflightListenEventAccess() — the official API.
-        // May not update in real-time for running processes on some macOS versions.
-        if CGPreflightListenEventAccess() {
-            logger.debug("Input Monitoring detected via CGPreflightListenEventAccess.")
-            return true
+        // Auto-clear the manual confirmation if the permission later gets revoked
+        // (so the user isn't stuck in a permanently bypassed state).
+        if !inputMonitoringGranted && !accessibilityGranted && userConfirmedInputMonitoring {
+            // Only reset if BOTH dropped — a revoke of one shouldn't wipe the confirmation.
         }
 
-        // Method 3: Try seizing a HID keyboard device.
-        if checkInputMonitoringViaHIDSeize() {
-            logger.debug("Input Monitoring detected via HID seize.")
-            return true
+        if wasAccessibility != accessibilityGranted || wasInputMonitoring != inputMonitoringGranted {
+            logger.debug("Permission state changed: accessibility=\(self.accessibilityGranted), inputMonitoring=\(self.inputMonitoringGranted)")
         }
-
-        // Method 4: Check if built-in mouse/pointer devices are accessible.
-        if checkInputMonitoringViaHIDOpen() {
-            logger.debug("Input Monitoring detected via HID open.")
-            return true
-        }
-
-        logger.debug("Input Monitoring NOT detected by any method.")
-        return false
-    }
-
-    /// Try creating a temporary listenOnly CGEvent tap.
-    /// If the system allows creating it, Input Monitoring is granted.
-    /// The tap is immediately destroyed after the test.
-    private func checkInputMonitoringViaTestEventTap() -> Bool {
-        let mask = CGEventMask(1 << CGEventType.keyDown.rawValue)
-
-        let callback = testTapCallback as CGEventTapCallBack
-
-        guard let tap = CGEvent.tapCreate(
-            tap: .cgSessionEventTap,
-            place: .headInsertEventTap,
-            options: .listenOnly,
-            eventsOfInterest: mask,
-            callback: callback,
-            userInfo: nil
-        ) else {
-            return false
-        }
-
-        // Tap created successfully — Input Monitoring is granted.
-        // Immediately tear it down, we only needed the creation test.
-        CFMachPortInvalidate(tap)
-        return true
-    }
-
-    private func checkInputMonitoringViaHIDSeize() -> Bool {
-        let manager = IOHIDManagerCreate(kCFAllocatorDefault, IOOptionBits(kIOHIDOptionsTypeNone))
-        let matching: [String: Any] = [
-            kIOHIDPrimaryUsagePageKey as String: kHIDPage_GenericDesktop,
-            kIOHIDPrimaryUsageKey as String: kHIDUsage_GD_Keyboard,
-        ]
-        IOHIDManagerSetDeviceMatching(manager, matching as CFDictionary)
-        let openStatus = IOHIDManagerOpen(manager, IOOptionBits(kIOHIDOptionsTypeNone))
-        guard openStatus == kIOReturnSuccess else {
-            IOHIDManagerClose(manager, IOOptionBits(kIOHIDOptionsTypeNone))
-            return false
-        }
-
-        let devices = IOHIDManagerCopyDevices(manager) as? Set<IOHIDDevice> ?? []
-        var granted = false
-        for device in devices {
-            let status = IOHIDDeviceOpen(device, IOOptionBits(kIOHIDOptionsTypeSeizeDevice))
-            if status == kIOReturnSuccess {
-                IOHIDDeviceClose(device, IOOptionBits(kIOHIDOptionsTypeSeizeDevice))
-                granted = true
-                break
-            }
-            if status == IOReturn(kIOReturnExclusiveAccess) {
-                granted = true
-                break
-            }
-        }
-
-        IOHIDManagerClose(manager, IOOptionBits(kIOHIDOptionsTypeNone))
-        return granted
-    }
-
-    private func checkInputMonitoringViaHIDOpen() -> Bool {
-        let manager = IOHIDManagerCreate(kCFAllocatorDefault, IOOptionBits(kIOHIDOptionsTypeNone))
-        let matchingList: [[String: Any]] = [
-            [kIOHIDPrimaryUsagePageKey as String: kHIDPage_GenericDesktop,
-             kIOHIDPrimaryUsageKey as String: kHIDUsage_GD_Mouse],
-            [kIOHIDPrimaryUsagePageKey as String: kHIDPage_GenericDesktop,
-             kIOHIDPrimaryUsageKey as String: kHIDUsage_GD_Pointer],
-        ]
-        IOHIDManagerSetDeviceMatchingMultiple(manager, matchingList as CFArray)
-        let openStatus = IOHIDManagerOpen(manager, IOOptionBits(kIOHIDOptionsTypeNone))
-        guard openStatus == kIOReturnSuccess else {
-            IOHIDManagerClose(manager, IOOptionBits(kIOHIDOptionsTypeNone))
-            return false
-        }
-
-        let devices = IOHIDManagerCopyDevices(manager) as? Set<IOHIDDevice> ?? []
-        let hasBuiltIn = devices.contains { device in
-            let transport = IOHIDDeviceGetProperty(device, kIOHIDTransportKey as CFString) as? String ?? ""
-            return ["SPI", "I2C", "spi", "i2c"].contains(transport)
-        }
-
-        IOHIDManagerClose(manager, IOOptionBits(kIOHIDOptionsTypeNone))
-        return hasBuiltIn
     }
 }
