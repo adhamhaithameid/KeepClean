@@ -18,6 +18,10 @@ settings:
     GENERATE_INFOPLIST_FILE: NO
     MACOSX_DEPLOYMENT_TARGET: "13.0"
 
+packages:
+  FitWindow:
+    path: ../FitWindow
+
 targets:
   KeepClean:
     type: application
@@ -38,6 +42,7 @@ targets:
       path: KeepClean/Info.plist
     settings:
       base:
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         INFOPLIST_KEY_CFBundleIconFile: KeepClean.icns
         PRODUCT_BUNDLE_IDENTIFIER: com.adhamhaithameid.keepclean
         PRODUCT_NAME: KeepClean
@@ -46,25 +51,32 @@ targets:
         CODE_SIGN_STYLE: Automatic
     dependencies:
       - target: KeepCleanHelper
+      - sdk: UserNotifications.framework
+      - package: FitWindow
     postBuildScripts:
-      - name: Copy App Resources
+      - name: Copy App Resources & Fix Icon
         script: |
           set -euo pipefail
           DEST="$TARGET_BUILD_DIR/$CONTENTS_FOLDER_PATH/Resources"
           PLIST="$TARGET_BUILD_DIR/$INFOPLIST_PATH"
           mkdir -p "$DEST"
-          cp "$SRCROOT/KeepClean/Resources/profile.png" "$DEST/profile.png"
-          cp "$SRCROOT/KeepClean/Resources/KeepClean.icns" "$DEST/KeepClean.icns"
-          cp "$SRCROOT/KeepClean/Resources/brand-mark.png" "$DEST/brand-mark.png"
+          cp -f "$SRCROOT/KeepClean/Resources/profile.png"    "$DEST/profile.png"
+          cp -f "$SRCROOT/KeepClean/Resources/KeepClean.icns" "$DEST/KeepClean.icns"
+          cp -f "$SRCROOT/KeepClean/Resources/brand-mark.png" "$DEST/brand-mark.png"
+          # Inject CFBundleIconFile — value must NOT have .icns extension
           if /usr/libexec/PlistBuddy -c "Print :CFBundleIconFile" "$PLIST" >/dev/null 2>&1; then
-            /usr/libexec/PlistBuddy -c "Set :CFBundleIconFile KeepClean.icns" "$PLIST"
+            /usr/libexec/PlistBuddy -c "Set :CFBundleIconFile KeepClean" "$PLIST"
           else
-            /usr/libexec/PlistBuddy -c "Add :CFBundleIconFile string KeepClean.icns" "$PLIST"
+            /usr/libexec/PlistBuddy -c "Add :CFBundleIconFile string KeepClean" "$PLIST"
           fi
-        outputFiles:
-          - $(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Resources/profile.png
-          - $(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Resources/KeepClean.icns
-          - $(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Resources/brand-mark.png
+          # Also set CFBundleIconName (used by modern macOS)
+          if /usr/libexec/PlistBuddy -c "Print :CFBundleIconName" "$PLIST" >/dev/null 2>&1; then
+            /usr/libexec/PlistBuddy -c "Set :CFBundleIconName KeepClean" "$PLIST"
+          else
+            /usr/libexec/PlistBuddy -c "Add :CFBundleIconName string KeepClean" "$PLIST"
+          fi
+          echo "[KeepClean] Icon keys injected into $PLIST"
+        # No outputFiles → script always runs, never skipped
       - name: Embed Helper
         script: |
           set -euo pipefail
@@ -85,6 +97,7 @@ targets:
       - path: KeepClean/Support/AppError.swift
       - path: KeepClean/Services/BuiltInInputControlling.swift
       - path: KeepClean/Services/LiveBuiltInInputController.swift
+      - path: KeepClean/Services/EmergencyStopShortcut.swift
     settings:
       base:
         OTHER_SWIFT_FLAGS: -parse-as-library
