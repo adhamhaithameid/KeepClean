@@ -16,6 +16,11 @@ enum AppEnvironment {
         }
 
         let settings = AppSettings(userDefaults: userDefaults)
+        // In UI test mode, bypass the permission setup gate so tests go directly
+        // to the main tab UI without needing real TCC permissions.
+        if overrides.useMockInputController {
+            settings.setupCompleted = true
+        }
         let inputController: any BuiltInInputControlling = overrides.useMockInputController
             ? MockBuiltInInputController()
             : LiveBuiltInInputController()
@@ -23,12 +28,19 @@ enum AppEnvironment {
             ? NoOpLinkOpener()
             : WorkspaceLinkOpener()
 
-        return AppViewModel(
+        let model = AppViewModel(
             settings: settings,
             inputController: inputController,
             helperLauncher: HelperProcessLauncher(),
             linkOpener: linkOpener,
             launchOverrides: overrides
         )
+        // In UI test mode, force permissions to "granted" so that:
+        // 1. The setup gate stays bypassed (resetSetupIfPermissionsRevoked won't re-show setup).
+        // 2. The Clean tab doesn't show permission banners.
+        if overrides.useMockInputController {
+            model.setPermissionsForTesting(accessibility: true, inputMonitoring: true)
+        }
+        return model
     }
 }
